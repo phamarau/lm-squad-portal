@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Squad Finance & Payments — Leroy Merlin</title>
+<!-- Favicon SVG inline -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='32' fill='%237bb51c'/%3E%3Ctext x='32' y='44' text-anchor='middle' font-size='36' font-family='Arial' font-weight='bold' fill='white'%3EL%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- SheetJS for Excel export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- Chart.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{
+  --lm:#7bb51c; --lm-d:#5a8a0e; --lm-dd:#3d6008; --lm-l:#e8f4cc; --lm-ll:#f4fae6;
+  --white:#ffffff; --gray:#333333; --gray2:#555555; --gray3:#888888;
+  --bg:#f5f7f2; --bg2:#ffffff; --bg3:#eef2e6; --border:#dde8cc;
+  --red:#dc2626; --red-l:#fee2e2; --orange:#d97706; --orange-l:#fef3c7;
+  --blue:#2563eb; --blue-l:#dbeafe; --purple:#7c3aed; --purple-l:#ede9fe;
+  --green:#16a34a; --green-l:#dcfce7;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 4px 16px rgba(60,100,0,.06);
+  --shadow-lg:0 8px 32px rgba(60,100,0,.12);
+  --radius:10px; --radius-lg:16px; --radius-xl:20px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;font-size:14px;}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--gray);min-height:100vh;}
+
+/* ── LAYOUT ── */
+.app{display:flex;min-height:100vh;}
+.sidebar{
+  width:240px;flex-shrink:0;background:var(--gray);
+  display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;
+  transition:width .3s;z-index:300;
+}
+.sidebar.collapsed{width:64px;}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;}
+
+/* ── SIDEBAR ── */
+.sb-brand{padding:20px 16px 16px;border-bottom:1px solid rgba(255,255,255,.1);}
+.sb-logo{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.sb-logo-icon{
+  width:36px;height:36px;border-radius:8px;flex-shrink:0;
+  background:var(--lm);display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:900;color:#fff;
+}
+.sb-logo-text{font-size:13px;font-weight:800;color:#fff;line-height:1.2;}
+.sb-logo-text small{display:block;font-size:10px;font-weight:400;color:rgba(255,255,255,.4);letter-spacing:.5px;}
+.sb-collapse-btn{
+  margin-top:8px;width:100%;padding:5px;border:1px solid rgba(255,255,255,.1);
+  border-radius:6px;background:transparent;color:rgba(255,255,255,.4);
+  cursor:pointer;font-size:12px;transition:.15s;text-align:left;display:flex;align-items:center;gap:6px;
+}
+.sb-collapse-btn:hover{color:rgba(255,255,255,.8);background:rgba(255,255,255,.06);}
+
+.sb-nav{flex:1;overflow-y:auto;padding:12px 8px;}
+.sb-nav::-webkit-scrollbar{width:3px;}
+.sb-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);}
+.sb-section{margin-bottom:16px;}
+.sb-section-label{
+  font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+  color:rgba(255,255,255,.25);padding:0 10px;margin-bottom:4px;
+}
+.sb-item{
+  display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;
+  cursor:pointer;font-size:13px;font-weight:600;color:rgba(255,255,255,.55);
+  transition:.15s;border:1px solid transparent;position:relative;white-space:nowrap;
+  overflow:hidden;
+}
+.sb-item:hover{color:rgba(255,255,255,.9);background:rgba(255,255,255,.07);}
+.sb-item.active{color:#fff;background:rgba(123,181,28,.25);border-color:rgba(123,181,28,.4);}
+.sb-item.active::before{
+  content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
+  width:3px;height:55%;background:var(--lm);border-radius:0 2px 2px 0;
+}
+.sb-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0;}
+.sb-badge{
+  margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;
+  padding:2px 6px;border-radius:10px;flex-shrink:0;
+}
+.sb-badge.g{background:rgba(123,181,28,.3);color:#b8e05a;}
+.sb-badge.r{background:rgba(220,38,38,.3);color:#fca5a5;}
+.sb-badge.y{background:rgba(217,119,6,.3);color:#fcd34d;}
+
+.sb-foot{padding:12px 8px;border-top:1px solid rgba(255,255,255,.08);}
+.sb-user{display:flex;align-items:center;gap:10px;padding:8px 10px;}
+.sb-av{
+  width:32px;height:32px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--lm),var(--lm-d));
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:800;color:#fff;
+}
+.sb-un{font-size:12px;font-weight:700;color:rgba(255,255,255,.8);}
+.sb-ur{font-size:10px;color:rgba(255,255,255,.3);}
+
+/* ── TOPBAR ── */
+.topbar{
+  height:56px;display:flex;align-items:center;gap:12px;padding:0 24px;
+  background:var(--bg2);border-bottom:1.5px solid var(--border);
+  position:sticky;top:0;z-index:200;box-shadow:var(--shadow);
+}
+.tb-title{font-size:16px;font-weight:800;color:var(--gray);flex:1;}
+.tb-title span{font-weight:400;color:var(--gray3);}
+.search-wrap{display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;transition:.15s;min-width:220px;}
+.search-wrap:focus-within{border-color:var(--lm);}
+.search-wrap input{border:none;outline:none;background:none;font-family:'Nunito',sans-serif;font-size:12px;color:var(--gray);width:100%;}
+.search-wrap input::placeholder{color:var(--gray3);}
+.tb-btn{
+  display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:none;
+  cursor:pointer;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;transition:.15s;
+  white-space:nowrap;
+}
+.tb-btn.primary{background:var(--lm);color:#fff;}
+.tb-btn.primary:hover{background:var(--lm-d);}
+.tb-btn.secondary{background:var(--bg);color:var(--gray2);border:1.5px solid var(--border);}
+.tb-btn.secondary:hover{border-color:var(--lm);color:var(--lm);}
+.tb-date{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gray3);background:var(--bg3);padding:4px 10px;border-radius:20px;white-space:nowrap;}
+
+/* ── VIEWS ── */
+.view{display:none;padding:24px;animation:vIn .2s ease;}
+.view.active{display:block;}
+@keyframes vIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── PAGE HEADER ── */
+.ph{margin-bottom:20px;display:flex;align-items:start;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.ph-text h1{font-size:22px;font-weight:800;color:var(--gray);}
+.ph-text p{font-size:13px;color:var(--gray3);margin-top:2px;}
+.ph-actions{display:flex;gap:8px;flex-wrap:wrap;}
+
+/* ── STAT GRID ── */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px;}
+.stat-card{
+  background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius-lg);
+  padding:16px;box-shadow:var(--shadow);transition:.2s;cursor:default;
+}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);}
+.stat-icon{font-size:22px;margin-bottom:6px;}
+.stat-num{font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:500;line-height:1;}
+.stat-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--gray3);margin-top:4px;}
+.stat-card.lm .stat-num{color:var(--lm-d);}
+.stat-card.grn .stat-num{color:var(--green);}
+.stat-card.org .stat-num{color:var(--orange);}
+.stat-card.red .stat-num{color:var(--red);}
+.stat-card.blu .stat-num{color:var(--blue);}
+.stat-card.pur .stat-num{color:var(--purple);}
+.stat-card.hero{background:linear-gradient(135deg,var(--lm-dd),var(--lm-d));border-color:transparent;}
+.stat-card.hero .stat-num{color:#d4f08a;}
+.stat-card.hero .stat-lbl{color:rgba(255,255,255,.4);}
+
+/* ── PANELS ── */
+.panel{background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow);margin-bottom:16px;}
+.panel-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.panel-title{font-size:13px;font-weight:800;color:var(--gray);display:flex;align-items:center;gap:8px;}
+.panel-title::before{content:'';width:3px;height:14px;background:var(--lm);border-radius:2px;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px;}
+@media(max-width:900px){.two-col,.three-col{grid-template-columns:1fr;}}
+
+/* ── PILLS / BADGES ── */
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;white-space:nowrap;letter-spacing:.2px;}
+.p-done{background:var(--green-l);color:var(--green);}
+.p-wip{background:var(--orange-l);color:var(--orange);}
+.p-blk{background:var(--red-l);color:var(--red);}
+.p-test{background:var(--purple-l);color:var(--purple);}
+.p-new{background:var(--blue-l);color:var(--blue);}
+.p-canc{background:#f3f4f6;color:#6b7280;}
+.p-idle{background:#f9fafb;color:#9ca3af;}
+.p-alta{background:var(--red-l);color:var(--red);}
+.p-media{background:var(--orange-l);color:var(--orange);}
+.p-baixa{background:var(--green-l);color:var(--green);}
+.p-crit{background:#fce7f3;color:#be185d;}
+.p-q1{background:var(--green-l);color:var(--lm-d);}
+.p-q2{background:var(--blue-l);color:var(--blue);}
+.p-q3{background:var(--purple-l);color:var(--purple);}
+.p-q4{background:var(--orange-l);color:var(--orange);}
+.p-sim{background:var(--green-l);color:var(--green);}
+.p-nao{background:var(--red-l);color:var(--red);}
+
+/* ── FILTER BAR ── */
+.filter-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;align-items:center;}
+.fb{
+  font-size:11px;font-weight:700;padding:5px 13px;border-radius:20px;
+  border:1.5px solid var(--border);background:var(--bg2);color:var(--gray3);
+  cursor:pointer;transition:.15s;font-family:'Nunito',sans-serif;
+}
+.fb:hover{border-color:var(--lm);color:var(--lm);}
+.fb.on{background:var(--lm);color:#fff;border-color:var(--lm);}
+.filter-sep{width:1px;height:20px;background:var(--border);margin:0 4px;}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead th{
+  font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;
+  color:var(--gray3);padding:8px 12px;text-align:left;
+  border-bottom:2px solid var(--border);white-space:nowrap;
+  background:var(--bg2);cursor:pointer;user-select:none;
+}
+thead th:hover{color:var(--lm);}
+tbody tr{border-bottom:1px solid var(--bg3);transition:.1s;cursor:pointer;}
+tbody tr:hover{background:var(--lm-ll);}
+tbody tr.selected{background:var(--lm-l);}
+td{padding:10px 12px;vertical-align:middle;}
+.td-id{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--gray3);white-space:nowrap;}
+.td-name{font-weight:700;color:var(--gray);max-width:240px;line-height:1.3;}
+.td-sm{font-size:11px;color:var(--gray3);white-space:nowrap;}
+.td-jira{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--lm-d);font-weight:500;}
+.td-blk{font-size:11px;color:var(--red);max-width:180px;}
+
+/* ── PAGINATION ── */
+.pager{display:flex;align-items:center;justify-content:space-between;padding:12px 0 0;margin-top:8px;border-top:1px solid var(--border);}
+.pager-info{font-size:11px;color:var(--gray3);}
+.pager-btns{display:flex;gap:4px;}
+.pager-btn{
+  width:30px;height:30px;border-radius:6px;border:1.5px solid var(--border);
+  background:var(--bg2);color:var(--gray2);cursor:pointer;font-size:12px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;transition:.15s;
+  font-family:'Nunito',sans-serif;
+}
+.pager-btn:hover{border-color:var(--lm);color:var(--lm);}
+.pager-btn.on{background:var(--lm);color:#fff;border-color:var(--lm);}
+.pager-btn:disabled{opacity:.35;cursor:default;}
+
+/* ── ALERTS ── */
+.alert-grid{display:flex;flex-direction:column;gap:8px;}
+.alert{
+  display:flex;align-items:start;gap:12px;padding:12px 16px;
+  border-radius:var(--radius);border-left:4px solid;transition:.15s;cursor:pointer;
+}
+.alert:hover{transform:translateX(2px);}
+.alert.danger{background:var(--red-l);border-color:var(--red);}
+.alert.warn{background:var(--orange-l);border-color:var(--orange);}
+.alert.info{background:var(--blue-l);border-color:var(--blue);}
+.alert.purple{background:var(--purple-l);border-color:var(--purple);}
+.alert-icon{font-size:18px;flex-shrink:0;margin-top:1px;}
+.alert-body{flex:1;}
+.alert-title{font-size:12px;font-weight:800;color:var(--gray);}
+.alert-desc{font-size:11px;color:var(--gray2);margin-top:2px;line-height:1.5;}
+.alert-count{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;margin-left:auto;padding:2px 8px;border-radius:10px;}
+.alert.danger .alert-count{background:var(--red);color:#fff;}
+.alert.warn .alert-count{background:var(--orange);color:#fff;}
+.alert.info .alert-count{background:var(--blue);color:#fff;}
+.alert.purple .alert-count{background:var(--purple);color:#fff;}
+
+/* ── PROGRESS ── */
+.prog-track{height:7px;background:var(--bg3);border-radius:4px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--lm-d),var(--lm));border-radius:4px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+
+/* ── KANBAN ── */
+.kanban{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;align-items:start;}
+.kol{background:var(--bg3);border-radius:var(--radius-lg);border:1.5px solid var(--border);overflow:hidden;}
+.kol-hd{padding:11px 14px;background:var(--bg2);border-bottom:1.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.kol-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;}
+.kol-n{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gray3);}
+.kol-cards{padding:8px;display:flex;flex-direction:column;gap:7px;max-height:480px;overflow-y:auto;}
+.kol-cards::-webkit-scrollbar{width:3px;}
+.kol-cards::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.kcard{
+  background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius);
+  padding:11px 13px;cursor:pointer;transition:.15s;border-left-width:4px;
+}
+.kcard:hover{box-shadow:var(--shadow-lg);transform:translateX(2px);}
+.kcard.done{border-left-color:var(--green);}
+.kcard.wip{border-left-color:var(--orange);}
+.kcard.blk{border-left-color:var(--red);}
+.kcard.test{border-left-color:var(--purple);}
+.kcard.new{border-left-color:var(--blue);}
+.kcard.canc{border-left-color:#9ca3af;opacity:.6;}
+.kc-id{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--gray3);margin-bottom:4px;}
+.kc-title{font-size:12px;font-weight:700;color:var(--gray);line-height:1.35;margin-bottom:7px;}
+.kc-foot{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;}
+.kc-resp{font-size:10px;color:var(--gray3);}
+.kc-blk{font-size:10px;color:var(--red);margin-top:4px;font-weight:600;}
+
+/* ── TIMELINE ── */
+.tl-scroll{overflow-x:auto;padding-bottom:8px;}
+.tl{min-width:820px;}
+.tl-head{
+  display:grid;grid-template-columns:220px repeat(4,1fr);
+  border-bottom:2px solid var(--border);padding-bottom:10px;margin-bottom:6px;
+  position:sticky;top:0;background:var(--bg2);z-index:5;
+}
+.tl-head-lbl{font-size:10px;font-weight:700;color:var(--gray3);padding:0 10px;text-transform:uppercase;letter-spacing:1px;}
+.tl-qhd{font-size:11px;font-weight:800;text-align:center;padding:6px 10px;border-radius:6px;text-transform:uppercase;letter-spacing:1px;}
+.tl-qhd.q1{background:var(--green-l);color:var(--lm-d);}
+.tl-qhd.q2{background:var(--blue-l);color:var(--blue);}
+.tl-qhd.q3{background:var(--purple-l);color:var(--purple);}
+.tl-qhd.q4{background:var(--orange-l);color:var(--orange);}
+.tl-group{margin-bottom:10px;}
+.tl-group-lbl{
+  font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;
+  color:var(--gray3);background:var(--bg3);border-radius:6px;
+  padding:5px 10px;margin-bottom:3px;
+}
+.tl-row{
+  display:grid;grid-template-columns:220px repeat(4,1fr);
+  align-items:center;min-height:34px;border-radius:8px;transition:.12s;cursor:pointer;
+}
+.tl-row:hover{background:var(--lm-ll);}
+.tl-row-name{font-size:11px;font-weight:600;color:var(--gray);padding:0 10px;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.tl-cell{padding:3px 6px;}
+.tl-bar{
+  height:24px;border-radius:6px;display:flex;align-items:center;padding:0 8px;
+  font-size:10px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;
+  width:90%;box-shadow:0 1px 3px rgba(0,0,0,.12);
+}
+.tl-bar.done{background:linear-gradient(90deg,#15803d,#16a34a);}
+.tl-bar.wip{background:linear-gradient(90deg,#b45309,#d97706);}
+.tl-bar.blk{background:linear-gradient(90deg,#b91c1c,#dc2626);}
+.tl-bar.test{background:linear-gradient(90deg,#5b21b6,#7c3aed);}
+.tl-bar.new{background:linear-gradient(90deg,#1d4ed8,#2563eb);}
+.tl-bar.canc{background:linear-gradient(90deg,#4b5563,#6b7280);opacity:.5;}
+.tl-bar.idle{background:var(--bg3);color:var(--gray3);border:1.5px dashed var(--border);}
+
+/* ── EPICS / TASKS ── */
+.proj-hd{background:linear-gradient(135deg,var(--lm-dd),var(--lm-d));border-radius:var(--radius-lg);padding:20px 24px;margin-bottom:16px;display:flex;align-items:center;gap:20px;}
+.proj-hd-info{flex:1;}
+.proj-hd-tag{font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,.4);margin-bottom:4px;}
+.proj-hd-name{font-size:18px;font-weight:800;color:#fff;}
+.proj-hd-sub{font-size:12px;color:rgba(255,255,255,.4);margin-top:2px;}
+.proj-hd-num{font-family:'JetBrains Mono',monospace;font-size:36px;font-weight:500;color:#d4f08a;line-height:1;}
+.proj-hd-lbl{font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;}
+
+.epics{display:flex;flex-direction:column;gap:10px;}
+.epic{background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+.epic-hd{display:flex;align-items:center;gap:12px;padding:12px 18px;cursor:pointer;transition:.12s;}
+.epic-hd:hover{background:var(--lm-ll);}
+.epic-name{font-size:13px;font-weight:800;color:var(--gray);flex:1;}
+.epic-stats{display:flex;align-items:center;gap:10px;}
+.epic-track{width:80px;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+.epic-fill{height:100%;background:var(--lm);border-radius:3px;}
+.epic-frac{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--gray3);}
+.epic-chev{color:var(--gray3);font-size:10px;transition:.2s;}
+.epic.collapsed .epic-chev{transform:rotate(-90deg);}
+.tasks{padding:0 0 10px 0;display:flex;flex-direction:column;}
+.trow{
+  display:grid;grid-template-columns:20px 1fr 130px 110px 120px 100px;gap:10px;
+  align-items:center;padding:8px 18px;font-size:11px;transition:.1s;border-top:1px solid var(--bg3);
+}
+.trow:hover{background:var(--lm-ll);}
+.trow-hd{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--gray3);background:var(--bg3);cursor:default;}
+.trow-hd:hover{background:var(--bg3);}
+.tchk{width:16px;height:16px;border-radius:4px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.tchk.ok{background:var(--green);border-color:var(--green);}
+.tchk.ok::after{content:'✓';font-size:9px;color:#fff;font-weight:800;}
+.tname{font-weight:600;color:var(--gray);}
+.tname.done-t{text-decoration:line-through;color:var(--gray3);}
+.tresp{color:var(--gray3);}
+.tdate{font-family:'JetBrains Mono',monospace;font-size:9px;color:#aaa;}
+
+/* ── PRBs ── */
+.prb-grid{display:flex;flex-direction:column;gap:12px;}
+.prb{background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;border-left-width:5px;transition:.15s;}
+.prb:hover{box-shadow:var(--shadow-lg);}
+.prb.crit{border-left-color:var(--red);}
+.prb.alto{border-left-color:var(--orange);}
+.prb.med{border-left-color:var(--purple);}
+.prb.ok2{border-left-color:var(--green);}
+.prb-top{display:flex;align-items:start;gap:12px;margin-bottom:10px;flex-wrap:wrap;}
+.prb-num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gray3);}
+.prb-title{font-size:14px;font-weight:800;color:var(--gray);flex:1;line-height:1.3;}
+.prb-pills{display:flex;gap:6px;flex-wrap:wrap;}
+.prb-section{margin-top:8px;}
+.prb-lbl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--gray3);margin-bottom:3px;}
+.prb-text{font-size:12px;color:var(--gray2);line-height:1.6;}
+
+/* ── MODAL ── */
+.overlay{display:none;position:fixed;inset:0;z-index:900;background:rgba(20,30,10,.5);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px;}
+.overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius-xl);padding:0;max-width:660px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:mIn .2s ease;}
+@keyframes mIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.modal-header{padding:20px 24px 16px;border-bottom:1.5px solid var(--border);display:flex;align-items:start;gap:14px;background:var(--lm-ll);border-radius:var(--radius-xl) var(--radius-xl) 0 0;}
+.modal-id-tag{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--lm-d);background:var(--lm-l);padding:3px 8px;border-radius:6px;font-weight:500;}
+.modal-title{font-size:17px;font-weight:800;color:var(--gray);line-height:1.3;margin-top:4px;}
+.modal-x{margin-left:auto;cursor:pointer;color:var(--gray3);font-size:20px;line-height:1;padding:4px 8px;border-radius:6px;flex-shrink:0;transition:.15s;}
+.modal-x:hover{background:var(--bg3);color:var(--gray);}
+.modal-body{padding:20px 24px;}
+.mf-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+.mf{margin-bottom:2px;}
+.mf label{display:block;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--gray3);margin-bottom:4px;}
+.mf p{font-size:13px;color:var(--gray);}
+.mf textarea{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-family:'Nunito',sans-serif;font-size:12px;color:var(--gray);resize:vertical;min-height:70px;outline:none;transition:.15s;}
+.mf textarea:focus{border-color:var(--lm);}
+.m-div{height:1px;background:var(--border);margin:14px 0;}
+.rice-box{background:var(--bg3);border-radius:var(--radius);padding:14px;text-align:center;}
+.rice-num{font-family:'JetBrains Mono',monospace;font-size:32px;font-weight:500;color:var(--lm-d);}
+.rice-lbl{font-size:10px;color:var(--gray3);margin-top:2px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;}
+.rice-formula{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gray3);margin-top:6px;}
+.hist-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:6px 12px;border-radius:8px;}
+.hist-yes{background:var(--green-l);color:var(--green);}
+.hist-no{background:var(--red-l);color:var(--red);}
+.modal-footer{padding:14px 24px;border-top:1.5px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+
+/* ── CRUD FORM ── */
+.form-modal .modal{max-width:740px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr;}.mf-grid{grid-template-columns:1fr;}}
+.form-group{display:flex;flex-direction:column;gap:4px;}
+.form-group.full{grid-column:1/-1;}
+.form-group label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--gray3);}
+.form-group input,.form-group select,.form-group textarea{
+  border:1.5px solid var(--border);border-radius:8px;padding:8px 11px;
+  font-family:'Nunito',sans-serif;font-size:13px;color:var(--gray);
+  outline:none;transition:.15s;background:var(--bg2);width:100%;
+}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--lm);}
+.form-group textarea{resize:vertical;min-height:60px;}
+.form-group.req label::after{content:' *';color:var(--red);}
+
+/* ── CHARTS ── */
+.chart-wrap{position:relative;height:220px;}
+
+/* ── EMPTY STATE ── */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px;color:var(--gray3);text-align:center;}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:.4;}
+.empty p{font-size:13px;}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:720px){
+  .sidebar{width:60px;}
+  .sb-logo-text,.sb-section-label,.sb-item>span:not(.sb-icon),.sb-badge,.sb-un,.sb-ur{display:none;}
+  .sb-item{justify-content:center;}
+  .topbar{padding:0 14px;}
+  .view{padding:14px;}
+  .kanban{grid-template-columns:1fr;}
+  .trow{grid-template-columns:20px 1fr 90px;}
+  .trow .tresp,.trow .tdate,.trow-hd>*:nth-child(n+4){display:none;}
+}
+
+/* ── PROJECT ACCORDION ── */
+.proj-accordion{display:flex;flex-direction:column;gap:12px;}
+.proj-card{background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow);}
+.proj-card-hd{
+  display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;
+  transition:.15s;border-left:5px solid var(--lm);
+}
+.proj-card-hd:hover{background:var(--lm-ll);}
+.proj-card-hd.collapsed-proj{border-left-color:var(--border);}
+.proj-card-toggle{font-size:18px;color:var(--lm);transition:.2s;flex-shrink:0;}
+.proj-card-hd.collapsed-proj .proj-card-toggle{transform:rotate(-90deg);color:var(--gray3);}
+.proj-card-info{flex:1;}
+.proj-card-tag{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--gray3);margin-bottom:3px;}
+.proj-card-name{font-size:15px;font-weight:800;color:var(--gray);}
+.proj-card-sub{font-size:11px;color:var(--gray3);margin-top:2px;}
+.proj-card-right{display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.proj-pct-box{text-align:right;}
+.proj-pct-num{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:500;color:var(--lm-d);line-height:1;}
+.proj-pct-lbl{font-size:9px;color:var(--gray3);text-transform:uppercase;letter-spacing:.8px;}
+.proj-card-body{border-top:1.5px solid var(--border);padding:0 20px 16px;}
+.proj-prog-wrap{padding:12px 0 16px;}
+.proj-actions{display:flex;gap:6px;margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo">
+      <div class="sb-logo-icon">L</div>
+      <div class="sb-logo-text">Finance &amp; Payments<small>Squad Portal · 2026</small></div>
+    </div>
+    <button class="sb-collapse-btn" onclick="toggleSidebar()"><span class="sb-icon">☰</span><span>Recolher</span></button>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-section">
+      <div class="sb-section-label">Visão</div>
+      <div class="sb-item active" onclick="go('dashboard',this)"><span class="sb-icon">🏠</span><span>Dashboard</span></div>
+      <div class="sb-item" onclick="go('alertas',this)"><span class="sb-icon">🔔</span><span>Alertas</span><span class="sb-badge r" id="alerta-count">0</span></div>
+      <div class="sb-item" onclick="go('charts',this)"><span class="sb-icon">📊</span><span>Gráficos</span></div>
+      <div class="sb-item" onclick="go('timeline',this)"><span class="sb-icon">🗓</span><span>Roadmap Timeline</span></div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-section-label">Operacional</div>
+      <div class="sb-item" onclick="go('demandas',this)"><span class="sb-icon">📋</span><span>Demandas (Backlog)</span><span class="sb-badge g" id="sb-bl-cnt">0</span></div>
+      <div class="sb-item" onclick="go('kanban',this)"><span class="sb-icon">🗂</span><span>Kanban</span></div>
+      <div class="sb-item" onclick="go('projetos',this)"><span class="sb-icon">⚙️</span><span>Projetos</span><span class="sb-badge y">Q1</span></div>
+      <div class="sb-item" onclick="go('prbs',this)"><span class="sb-icon">🐛</span><span>PRBs</span><span class="sb-badge r" id="sb-prb-cnt">0</span></div>
+    </div>
+  </nav>
+  <div class="sb-foot">
+    <div class="sb-user">
+      <div class="sb-av">P</div>
+      <div><div class="sb-un">Paulo</div><div class="sb-ur">Product Owner</div></div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="tb-title" id="tb-title">Dashboard <span>/ Visão Executiva</span></div>
+    <div class="search-wrap">
+      <span style="color:var(--gray3);font-size:14px">🔍</span>
+      <input type="text" placeholder="Buscar por nome, ID, responsável…" id="srch" oninput="doSearch()">
+    </div>
+    <button class="tb-btn secondary" onclick="exportExcel()">⬇ Exportar Excel</button>
+    <div class="tb-date" id="dt"></div>
+  </header>
+
+  <!-- VIEWS -->
+
+  <!-- DASHBOARD -->
+  <div class="view active" id="view-dashboard">
+    <div class="ph"><div class="ph-text"><h1>Painel Executivo</h1><p>Status consolidado · Squad Finance & Payments · 2026</p></div></div>
+    <div class="stat-grid" id="stats"></div>
+    <div class="two-col">
+      <div class="panel"><div class="panel-hd"><div class="panel-title">🚨 Em Risco / Bloqueadas</div></div><div class="alert-grid" id="dash-risks"></div></div>
+      <div class="panel"><div class="panel-hd"><div class="panel-title">📊 Progresso por Tema</div></div><div id="temas"></div></div>
+    </div>
+    <div class="panel"><div class="panel-hd"><div class="panel-title">✅ Iniciativas Concluídas</div></div>
+      <div class="tbl-wrap"><table><thead><tr><th>ID</th><th>Iniciativa</th><th>Tema</th><th>Responsável</th><th>Entrega Real</th></tr></thead><tbody id="done-tbl"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- ALERTAS -->
+  <div class="view" id="view-alertas">
+    <div class="ph"><div class="ph-text"><h1>Painel de Alertas</h1><p>Demandas que requerem atenção imediata</p></div></div>
+    <div class="three-col">
+      <div class="panel"><div class="panel-hd"><div class="panel-title">📅 Atrasadas</div></div><div class="alert-grid" id="al-late"></div></div>
+      <div class="panel"><div class="panel-hd"><div class="panel-title">⏰ Vencendo em 3 dias</div></div><div class="alert-grid" id="al-soon"></div></div>
+      <div class="panel"><div class="panel-hd"><div class="panel-title">📝 Sem História</div></div><div class="alert-grid" id="al-nohist"></div></div>
+    </div>
+    <div class="panel"><div class="panel-hd"><div class="panel-title">⚠ Informações Incompletas</div></div><div class="alert-grid" id="al-incomplete"></div></div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="view" id="view-charts">
+    <div class="ph"><div class="ph-text"><h1>Gráficos & Analytics</h1><p>Visão analítica das iniciativas e demandas</p></div></div>
+    <div class="two-col">
+      <div class="panel"><div class="panel-hd"><div class="panel-title">Status das Iniciativas</div></div><div class="chart-wrap"><canvas id="chart-status"></canvas></div></div>
+      <div class="panel"><div class="panel-hd"><div class="panel-title">Iniciativas por Tema</div></div><div class="chart-wrap"><canvas id="chart-tema"></canvas></div></div>
+    </div>
+    <div class="two-col">
+      <div class="panel"><div class="panel-hd"><div class="panel-title">Distribuição por Quarter</div></div><div class="chart-wrap"><canvas id="chart-quarter"></canvas></div></div>
+      <div class="panel"><div class="panel-hd"><div class="panel-title">Prioridade do Backlog</div></div><div class="chart-wrap"><canvas id="chart-prio"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="view" id="view-timeline">
+    <div class="ph"><div class="ph-text"><h1>Roadmap — Timeline 2026</h1><p>Visão macro por quarter</p></div></div>
+    <div class="panel"><div class="filter-bar" id="tl-filters"></div><div class="tl-scroll"><div class="tl" id="tl-inner"></div></div></div>
+  </div>
+
+  <!-- DEMANDAS -->
+  <div class="view" id="view-demandas">
+    <div class="ph">
+      <div class="ph-text"><h1>Backlog — Demandas</h1><p>Score RICE ordenado · clique para ver ou editar</p></div>
+      <div class="ph-actions"><button class="tb-btn primary" onclick="openCrudForm('bl')">+ Nova Demanda</button></div>
+    </div>
+    <div class="filter-bar" id="bl-filters"></div>
+    <div class="panel">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th onclick="sortBl('id')">ID</th>
+            <th onclick="sortBl('name')">Demanda</th>
+            <th onclick="sortBl('area')">Área</th>
+            <th onclick="sortBl('sistema')">Sistema</th>
+            <th onclick="sortBl('resp')">Resp.</th>
+            <th onclick="sortBl('prio')">Prioridade</th>
+            <th onclick="sortBl('status')">Status</th>
+            <th>História</th>
+            <th onclick="sortBl('rice')">RICE ↓</th>
+            <th>Jira</th>
+            <th>Ações</th>
+          </tr></thead>
+          <tbody id="bl-tbl"></tbody>
+        </table>
+      </div>
+      <div class="pager" id="bl-pager"></div>
+    </div>
+  </div>
+
+  <!-- KANBAN -->
+  <div class="view" id="view-kanban">
+    <div class="ph"><div class="ph-text"><h1>Kanban — Iniciativas</h1><p>Filtrar por responsável</p></div></div>
+    <div class="filter-bar" id="kb-filters"></div>
+    <div class="kanban" id="kanban-board"></div>
+  </div>
+
+  <!-- PROJETOS -->
+  <div class="view" id="view-projetos">
+    <div class="ph">
+      <div class="ph-text"><h1>Projetos — Execução</h1><p>Clique num projeto para expandir · CRUD completo de projetos, épicos e tarefas</p></div>
+      <div class="ph-actions"><button class="tb-btn primary" onclick="openProjectForm()">+ Novo Projeto</button></div>
+    </div>
+    <div id="proj-content"></div>
+  </div>
+
+  <!-- PRBs -->
+  <div class="view" id="view-prbs">
+    <div class="ph">
+      <div class="ph-text"><h1>Controle de PRBs</h1><p>Incidentes críticos</p></div>
+      <div class="ph-actions"><button class="tb-btn primary" onclick="openCrudForm('prb')">+ Novo PRB</button></div>
+    </div>
+    <div class="prb-grid" id="prb-content"></div>
+  </div>
+
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- OVERLAYS -->
+<div class="overlay" id="view-overlay" onclick="closeOverlay(event)"><div class="modal" id="view-modal"></div></div>
+<div class="overlay form-modal" id="form-overlay" onclick="closeFormOverlay(event)"><div class="modal" id="form-modal"></div></div>
+
+<script>
+/* ═══════════════════════ SEED DATA ═══════════════════════ */
+const SEED_RM = [
+  {id:"FP-001",name:"Migração adquirente e-commerce - Getnet",tema:"Meios de Pagamento",resp:"Leonardo",q:"Q1",status:"🟢 Concluído",deadline:"2026-02-02",jira:"PEC-123",blocker:"—",integracoes:"VA, Boitatá, B2B, SAP",obs:"Finalizado. Getnet ativo."},
+  {id:"FP-002",name:"Orquestração de meios de pagamento - Yuno",tema:"Meios de Pagamento",resp:"Leonardo",q:"Q1",status:"🟡 Em andamento",deadline:"2026-03-30",jira:"PEC-124",blocker:"Conciliação com Y Tecnologia em definição",integracoes:"VA, Boitatá, B2B, Marketplace",obs:"Go live faseado pendente"},
+  {id:"FP-003",name:"Antifraude — tirar do VA",tema:"Meios de Pagamento",resp:"Leonardo",q:"Q1",status:"🟣 Em testes",deadline:"2026-02-28",jira:"PEC-38",blocker:"Alinhamento testes com ClearSale",integracoes:"VA, Boitatá, B2B",obs:"Aguardando testes integrados"},
+  {id:"FP-004",name:"Novas regras de antifraude",tema:"Meios de Pagamento",resp:"Leonardo",q:"Q1",status:"🟡 Em andamento",deadline:"",jira:"PEC-38",blocker:"—",integracoes:"—",obs:"Em estudo com FP-003"},
+  {id:"FP-005",name:"Vale troca no e-commerce",tema:"Meios de Pagamento",resp:"Leonardo",q:"Q2",status:"🟠 Bloqueado",deadline:"",jira:"PEC-87",blocker:"Aguardando alinhamento Milton/Alisson",integracoes:"VA, SAP",obs:"Desligado — aguarda priorização"},
+  {id:"FP-006",name:"Leroy Merlin Envios",tema:"Meios de Pagamento",resp:"Leonardo",q:"Q1",status:"🟡 Em andamento",deadline:"",jira:"SO-38",blocker:"Estimativa não enviada ao Vandré",integracoes:"HUB, SAP",obs:"3 sprints HUB + 6 sprints SAP"},
+  {id:"FP-007",name:"Double check segurança no reembolso",tema:"Meios de Pagamento",resp:"Leonardo",q:"Q2",status:"🟡 Em andamento",deadline:"",jira:"PEC-89",blocker:"—",integracoes:"—",obs:"Ajustes no processo realizados"},
+  {id:"FP-009",name:"Monitoria de aprovação dos pagamentos",tema:"Meios de Pagamento",resp:"Leonardo",q:"Q2",status:"🔵 Não iniciado",deadline:"",jira:"—",blocker:"—",integracoes:"—",obs:"—"},
+  {id:"FP-010",name:"Monitoria dos SLAs de antifraude",tema:"Meios de Pagamento",resp:"Leonardo",q:"Q2",status:"🔵 Não iniciado",deadline:"",jira:"—",blocker:"—",integracoes:"—",obs:"Avaliar após antifraude"},
+  {id:"FP-014",name:"Validação e monitoria processos reembolso",tema:"Meios de Pagamento",resp:"Leonardo",q:"Q3",status:"🟡 Em andamento",deadline:"",jira:"PEC-89",blocker:"—",integracoes:"—",obs:"—"},
+  {id:"FP-019",name:"Pedido único — Captura única cartão",tema:"Meios de Pagamento",resp:"Leonardo",q:"Q1",status:"🟢 Concluído",deadline:"2026-01-12",jira:"PEC-110",blocker:"—",integracoes:"—",obs:"Finalizado"},
+  {id:"FP-020",name:"Atualização logo ELO no checkout",tema:"Meios de Pagamento",resp:"Leonardo",q:"Q1",status:"🟡 Em andamento",deadline:"2026-02-15",jira:"—",blocker:"—",integracoes:"—",obs:"—"},
+  {id:"FP-024",name:"Wallet Celebre! Android",tema:"LM Pay",resp:"Felipe",q:"Q1",status:"🟠 Bloqueado",deadline:"2026-01-12",jira:"PEC-118",blocker:"Em atraso — sem data real definida",integracoes:"—",obs:"—"},
+  {id:"FP-025",name:"Wallet Celebre! Samsung",tema:"LM Pay",resp:"Felipe",q:"—",status:"🔵 Não iniciado",deadline:"",jira:"PEC-118",blocker:"—",integracoes:"—",obs:"—"},
+  {id:"FP-026",name:"Wallet Celebre! iOS",tema:"LM Pay",resp:"Felipe",q:"Q3",status:"🔵 Não iniciado",deadline:"",jira:"PEC-119",blocker:"—",integracoes:"—",obs:"—"},
+  {id:"FP-027",name:"Nova Versão do APP LM Pay",tema:"LM Pay",resp:"Felipe",q:"Q1",status:"🟠 Bloqueado",deadline:"2026-01-12",jira:"PEC-115",blocker:"Em atraso",integracoes:"—",obs:"—"},
+  {id:"FP-028",name:"Aquisição Cartão Celebre! App LM Pay",tema:"LM Pay",resp:"Felipe",q:"Q3",status:"🟡 Em andamento",deadline:"",jira:"PEC-101",blocker:"—",integracoes:"—",obs:"Em estudo"},
+  {id:"FP-030",name:"Integração automática dados Pefisa",tema:"LM Pay",resp:"Felipe",q:"Q2",status:"🟡 Em andamento",deadline:"",jira:"PEC-102",blocker:"Aguardando Pefisa enviar base de dados",integracoes:"—",obs:"Bianca e Diego"},
+  {id:"FP-031",name:"Calculadora pagamentos Celebre com juros",tema:"LM Pay",resp:"Felipe",q:"Q1",status:"🟡 Em andamento",deadline:"",jira:"PEC-126",blocker:"—",integracoes:"—",obs:"—"},
+  {id:"FP-035",name:"Recebimento Fatura LM Pay nas lojas",tema:"LM Pay",resp:"Felipe",q:"Q4",status:"🟡 Em andamento",deadline:"",jira:"PEC-114",blocker:"—",integracoes:"—",obs:"Em estudo"},
+  {id:"FP-041",name:"Conciliação marketplace out — Koncili",tema:"Contas a Receber",resp:"Paulo",q:"Q1",status:"🟡 Em andamento",deadline:"",jira:"PEC-125",blocker:"Em análise comitê/arquitetura",integracoes:"SAP",obs:"Aprovação comitê 13/02"},
+  {id:"FP-042",name:"Troca conciliador — Y Tecnologia",tema:"Contas a Receber",resp:"Paulo",q:"Q2",status:"🟡 Em andamento",deadline:"",jira:"PEC-100",blocker:"Ajustes pós Go Live em andamento",integracoes:"SAP",obs:"Golive PIX PDV 01/03, PagarMe 12/03"},
+  {id:"FP-043",name:"Conciliação marketplace — Y Tecnologia (out)",tema:"Contas a Receber",resp:"Paulo",q:"Q4",status:"🟠 Bloqueado",deadline:"",jira:"PEC-116",blocker:"Postergado — sem previsão",integracoes:"SAP",obs:"—"},
+  {id:"FP-044",name:"Automatização devolução venda faturada",tema:"Mesa de Crédito",resp:"Paulo",q:"Q1",status:"🟢 Concluído",deadline:"2026-01-30",jira:"PEC-56",blocker:"—",integracoes:"RPA",obs:"Em operação assistida"},
+  {id:"FP-045",name:"Segurança na utilização de Vale-trocas",tema:"Meios de Pagamento",resp:"Paulo",q:"Q2",status:"🟡 Em andamento",deadline:"",jira:"RDSL01584517",blocker:"Em análise time de arquitetura",integracoes:"—",obs:"—"},
+  {id:"FP-047",name:"Envio Notificação Cartas Cancelamento",tema:"Contas a Receber",resp:"Paulo",q:"Q2",status:"🔵 Não iniciado",deadline:"",jira:"—",blocker:"Definir: SNOW ou Hub de comunicação",integracoes:"HUB, Service Now",obs:"—"},
+  {id:"FP-049",name:"EYE Mobile",tema:"Meios de Pagamento",resp:"Paulo",q:"—",status:"🟠 Bloqueado",deadline:"",jira:"RDSL01628320",blocker:"Negado pelo comitê 13/02 — rever",integracoes:"—",obs:"—"},
+  {id:"FP-050",name:"CNPJ Alfanumérico",tema:"Reforma Tributária",resp:"Felipe",q:"Q2",status:"🟡 Em andamento",deadline:"2026-06-30",jira:"AC-125",blocker:"—",integracoes:"—",obs:"—"},
+  {id:"FP-051",name:"Duplicata Escritural",tema:"Reforma Tributária",resp:"Leonardo",q:"Q3",status:"🔵 Não iniciado",deadline:"2026-10-31",jira:"PEC-128",blocker:"—",integracoes:"—",obs:"—"},
+  {id:"FP-055",name:"Migração da Docusign",tema:"Business Assurance",resp:"Felipe",q:"Q1",status:"🟠 Bloqueado",deadline:"2026-02-15",jira:"RLAA-48",blocker:"Em atraso",integracoes:"—",obs:"—"},
+  {id:"FP-056",name:"IFRS — NU",tema:"Business Assurance",resp:"Felipe",q:"Q3",status:"🟡 Em andamento",deadline:"2026-07-31",jira:"RLAA-49",blocker:"—",integracoes:"—",obs:"—"},
+  {id:"FP-057",name:"Moki — Evoluções na Plataforma",tema:"Business Assurance",resp:"Felipe",q:"Q1",status:"🟠 Bloqueado",deadline:"",jira:"—",blocker:"Em atraso",integracoes:"—",obs:"—"},
+  {id:"FP-059",name:"Mapeamento de rotinas automatizadas",tema:"Business Assurance",resp:"Felipe",q:"?",status:"🟠 Bloqueado",deadline:"",jira:"RLAA-44",blocker:"Em atraso",integracoes:"—",obs:"—"},
+  {id:"FP-046",name:"Implementação OngSys — Instituto LM",tema:"S4",resp:"Paulo",q:"Q1",status:"🟡 Em andamento",deadline:"",jira:"PEC-117",blocker:"—",integracoes:"—",obs:"—"},
+  {id:"FP-060",name:"Aevee (S4)",tema:"S4",resp:"Leonardo",q:"Q4",status:"🔵 Não iniciado",deadline:"2027-01-01",jira:"—",blocker:"—",integracoes:"—",obs:"Horizonte 2027"},
+  {id:"FP-061",name:"Projuris (S4)",tema:"S4",resp:"Felipe",q:"Q4",status:"🔵 Não iniciado",deadline:"2027-01-01",jira:"—",blocker:"—",integracoes:"—",obs:"Horizonte 2027"},
+];
+
+const SEED_BL = [
+  {id:"BL-001",idInic:"FP-041",name:"Automatização Conciliação Cancelamento vs Vale-Trocas",area:"Contas a Receber",prio:"Alta",sistema:"SAP",tipo:"Melhoria",resp:"Diego",status:"🟡 Em andamento",R:8,I:5,C:80,E:3,jira:"—",hist:"Sim",deadline:"",comentarios:"Entrega parcial realizada"},
+  {id:"BL-002",idInic:"FP-042",name:"Criar Rotina ZFI0009 Vendas/Liquidações",area:"Contas a Receber",prio:"Alta",sistema:"SAP",tipo:"Melhoria",resp:"Diego",status:"🟡 Em andamento",R:9,I:7,C:70,E:3,jira:"—",hist:"Não",deadline:"",comentarios:"Em andamento — Y Tecnologia"},
+  {id:"BL-003",idInic:"FP-047",name:"Envio Notificação Cartas Cancelamento via HUB",area:"Contas a Receber",prio:"Alta",sistema:"HUB",tipo:"Melhoria",resp:"Beatriz",status:"🔵 Não iniciado",R:7,I:5,C:60,E:2,jira:"—",hist:"Não",deadline:"2026-05-30",comentarios:""},
+  {id:"BL-004",idInic:"FP-047",name:"Relatórios Hub Pagamentos (Boleto por Canal)",area:"Contas a Receber",prio:"Alta",sistema:"HUB",tipo:"Melhoria",resp:"Diego",status:"🔵 Não iniciado",R:6,I:4,C:70,E:2,jira:"—",hist:"Não",deadline:"",comentarios:""},
+  {id:"BL-005",idInic:"FP-042",name:"Integração Analítica Cancelamentos Marketplace Pós Repasse",area:"Contas a Receber",prio:"Alta",sistema:"SAP",tipo:"Melhoria",resp:"Deise/Jacke",status:"🟡 Em andamento",R:8,I:6,C:65,E:3,jira:"",hist:"Sim",deadline:"",comentarios:""},
+  {id:"BL-006",idInic:"FP-002",name:"Googlist — não envio de recorrentes ao Antifraude",area:"Mesa de Crédito",prio:"Alta",sistema:"HUB/Yuno",tipo:"Melhoria",resp:"Paulo",status:"🟡 Em andamento",R:10000,I:5,C:85,E:1,jira:"—",hist:"Sim",deadline:"",comentarios:"25/03 — será implementado com Yuno"},
+  {id:"BL-007",idInic:"FP-007",name:"Melhorias Reembolso Online — Hub Pagamentos",area:"Contas a Receber",prio:"Alta",sistema:"HUB",tipo:"Melhoria",resp:"Samantha",status:"🔵 Não iniciado",R:7,I:5,C:60,E:2,jira:"—",hist:"Não",deadline:"",comentarios:""},
+  {id:"BL-008",idInic:"FP-010",name:"Monitoramento SLAs Antifraude",area:"Mesa de Crédito",prio:"Alta",sistema:"HUB",tipo:"Melhoria",resp:"Glaucia",status:"🔵 Não iniciado",R:10000,I:5,C:85,E:1,jira:"—",hist:"Não",deadline:"",comentarios:"25/03 — avaliar após implementação antifraude"},
+  {id:"BL-009",idInic:"FP-044",name:"Compensação Automática Devoluções Venda Faturada",area:"Mesa de Crédito",prio:"Alta",sistema:"SAP",tipo:"Melhoria",resp:"Ivair",status:"🟢 Concluído",R:0,I:0,C:0,E:0,jira:"PEC-56",hist:"Sim",deadline:"2026-01-30",comentarios:"Em operação assistida"},
+  {id:"BL-010",idInic:"—",name:"Automatização Relatório Prazo Médio por Canal",area:"Contas a Receber",prio:"Média",sistema:"Qlik",tipo:"Melhoria",resp:"—",status:"🟡 Em andamento",R:0,I:0,C:0,E:0,jira:"—",hist:"Não",deadline:"",comentarios:""},
+  {id:"BL-011",idInic:"—",name:"Desmembramento Conta Diversos Venda Sucata/Leilão",area:"Contas a Receber",prio:"Média",sistema:"SAP",tipo:"Melhoria",resp:"—",status:"🟡 Em andamento",R:0,I:0,C:0,E:0,jira:"—",hist:"Não",deadline:"",comentarios:""},
+  {id:"BL-020",idInic:"—",name:"Jornada Cadastro Cliente PJ — FLAG, Bloqueio 1ª Compra",area:"Mesa de Crédito",prio:"Alta",sistema:"VA",tipo:"Melhoria",resp:"—",status:"🔵 Não iniciado",R:0,I:0,C:0,E:0,jira:"—",hist:"Não",deadline:"",comentarios:"1ª Prio 2025"},
+  {id:"BL-027",idInic:"—",name:"Aprovação Folha de Pagamento via Nexxera",area:"Tesouraria",prio:"Alta",sistema:"Nexxera",tipo:"Iniciativa",resp:"—",status:"🔵 Não iniciado",R:0,I:0,C:0,E:0,jira:"—",hist:"Não",deadline:"",comentarios:"Compliance — risco fraude ADEO"},
+  {id:"BL-028",idInic:"—",name:"Conciliação Bancária Automática Banco BNP",area:"Tesouraria",prio:"Alta",sistema:"SAP",tipo:"Projeto",resp:"—",status:"🔵 Não iniciado",R:0,I:0,C:0,E:0,jira:"—",hist:"Não",deadline:"",comentarios:"Aproveitar jobs outras contas"},
+  {id:"BL-034",idInic:"FP-050",name:"CNPJ Alfanumérico",area:"Reforma Tributária",prio:"Alta",sistema:"SAP",tipo:"Projeto",resp:"Felipe",status:"🟡 Em andamento",R:0,I:0,C:0,E:0,jira:"AC-125",hist:"Sim",deadline:"2026-06-30",comentarios:""},
+  {id:"BL-035",idInic:"FP-051",name:"Duplicata Escritural",area:"Reforma Tributária",prio:"Alta",sistema:"SAP",tipo:"Projeto",resp:"Leonardo",status:"🔵 Não iniciado",R:0,I:0,C:0,E:0,jira:"PEC-128",hist:"Não",deadline:"2026-10-31",comentarios:""},
+  {id:"BL-036",idInic:"FP-055",name:"Migração da Docusign",area:"Business Assurance",prio:"Alta",sistema:"—",tipo:"Projeto",resp:"Felipe",status:"🟠 Bloqueado",R:0,I:0,C:0,E:0,jira:"RLAA-48",hist:"Sim",deadline:"2026-02-15",comentarios:"Em atraso"},
+  {id:"BL-037",idInic:"FP-056",name:"IFRS — NU",area:"Business Assurance",prio:"Alta",sistema:"—",tipo:"Projeto",resp:"Felipe",status:"🟡 Em andamento",R:0,I:0,C:0,E:0,jira:"RLAA-49",hist:"Sim",deadline:"2026-07-31",comentarios:""},
+  {id:"BL-038",idInic:"FP-059",name:"Mapeamento de rotinas automatizadas",area:"Business Assurance",prio:"Média",sistema:"—",tipo:"Projeto",resp:"Felipe",status:"🟠 Bloqueado",R:0,I:0,C:0,E:0,jira:"RLAA-44",hist:"Não",deadline:"",comentarios:"Em atraso"},
+];
+
+const SEED_PRBS = [
+  {id:"PRB-001",num:"PRB00025689",inic:"FP-002",data:"2026-02-12",status:"🔵 Registrado",imp:"Crítico",title:"Celebre Débito (Pefisa) parou no PDV após correção de BIN",desc:"Após correção de BIN do Celebre, fluxo de Celebre Débito no PDV parou. Transações retornam 'Cartão inválido'. Sistema roteando como ELO Débito convencional.",contorno:"Passar cartão na máquina POS (contorno físico).",def:"Sem solução definitiva. Bloqueio no fluxo legítimo de Celebre Débito."},
+  {id:"PRB-002",num:"PRB00025414",inic:"FP-002",data:"2025-10-14",status:"🟣 Em Homologação",imp:"Alto",title:"Devolução no caixa de trocas gera VT com valor a menor",desc:"Na devolução de pedido no caixa de trocas, valor total de LMs para geração do VT ficava a menor.",contorno:"Geração manual do Voucher + correção posterior com auditoria.",def:"Solução embarcada na versão 17.03.00 — em homologação em QA."},
+  {id:"PRB-003",num:"PRB00025283",inic:"FP-002",data:"2025-08-18",status:"🟡 Em Análise",imp:"Alto",title:"Valor cobrado inferior ao total do cupom — pagamento a menor",desc:"Divergência entre total registrado e valor efetivamente pago pelo cliente.",contorno:"Corrigir manualmente na RECB o valor pago do cliente.",def:"Cobrar corretamente o cliente pelo valor total do cupom."},
+  {id:"PRB-004",num:"PRB00025282",inic:"FP-002",data:"2025-08-18",status:"🟢 Resolvido",imp:"Alto",title:"Desconto especial + vale-troca gerando inconsistência no PDV",desc:"Ao aplicar desconto especial em vendas com vale-troca, PDV apresentava inconsistência no cálculo.",contorno:"Corrigir manualmente valores do pagamento.",def:"Aplicar o desconto especial corretamente na venda."},
+  {id:"PRB-005",num:"PRB00025070",inic:"FP-002",data:"2025-04-16",status:"⚫ Encerrado",imp:"Alto",title:"Desconto fidelidade não cobrado do cliente",desc:"Desconto fidelidade aplicado nos itens mas não considerado na cobrança.",contorno:"Ajuste manual do cupom.",def:"PRB subiu para fechar."},
+  {id:"PRB-006",num:"PRB00024937",inic:"FP-002",data:"2025-02-21",status:"⚫ Encerrado",imp:"Alto",title:"DESC_REGRA incorreto em transações com múltiplos descontos",desc:"Inconsistência na gravação de descontos em transações com promoção Preferência + desconto manual + 6% à vista.",contorno:"Versão 16.59.04 - OK.",def:"Corrigido na versão 16.60.02."},
+];
+
+const SEED_EPICS = [
+  {nome:"Modelo de Pagamento",t:[
+    {n:"Definir entidades de pagamento",r:"Rafael Douglas",s:"🟡 Em andamento",d:""},
+    {n:"Definir status do pedido",r:"Rafael Douglas",s:"🟡 Em andamento",d:""},
+    {n:"Definir tabelas de pagamento",r:"—",s:"🔵 Não iniciado",d:""},
+  ]},
+  {nome:"Tokenização",t:[
+    {n:"Definir fluxo",r:"Rafael Douglas",s:"🟢 Concluído",d:"01/04→14/04"},
+    {n:"Endpoint de tokenização",r:"Rafael Douglas",s:"🟢 Concluído",d:"01/04→14/04"},
+    {n:"Endpoint de verify",r:"Rafael Douglas",s:"🟢 Concluído",d:"01/04→14/04"},
+    {n:"Validar integração SDK Yuno",r:"Rafael Douglas",s:"🟢 Concluído",d:"01/04→14/04"},
+    {n:"Tela de teste de Tokenização",r:"Rafael Douglas",s:"🟢 Concluído",d:"01/04→14/04"},
+    {n:"Documentação",r:"—",s:"🟡 Em andamento",d:"01/04→14/04"},
+    {n:"Homologação",r:"Leonardo",s:"🔵 Não iniciado",d:"01/04→14/04"},
+    {n:"Validar com PCI",r:"Leonardo",s:"🔵 Não iniciado",d:"14/04→28/04"},
+  ]},
+  {nome:"Client de Integração com Yuno",t:[
+    {n:"Implementar cliente http",r:"Rafael Douglas",s:"🟢 Concluído",d:""},
+    {n:"Configurar APIKeys",r:"Tiago Kihara",s:"🟢 Concluído",d:""},
+    {n:"Configurar timeout, retry e circuit breaker",r:"Rafael Douglas",s:"🟢 Concluído",d:""},
+  ]},
+  {nome:"Fluxos de Pagamento Cartão",t:[
+    {n:"Criação de pagamento 1P (pré autorizado)",r:"Rafael Douglas",s:"🟡 Em andamento",d:"01/04→14/04"},
+    {n:"Criação de pagamento 3P",r:"Rafael Douglas",s:"🔵 Não iniciado",d:"01/04→14/04"},
+    {n:"Criação de pagamento Misto",r:"Rafael Douglas",s:"🔵 Não iniciado",d:"01/04→14/04"},
+    {n:"Captura 1P",r:"Rafael Douglas",s:"🟡 Em andamento",d:"01/04→14/04"},
+    {n:"Captura 3P",r:"Rafael Douglas",s:"🔵 Não iniciado",d:"01/04→14/04"},
+    {n:"Cancelamento 1P",r:"Diego Viana",s:"🔵 Não iniciado",d:"01/04→14/04"},
+    {n:"Cancelamento 3P",r:"Diego Viana",s:"🔵 Não iniciado",d:"01/04→14/04"},
+    {n:"Reembolso 1P",r:"Diego Viana",s:"🔵 Não iniciado",d:"14/04→28/04"},
+    {n:"Reembolso 3P",r:"Diego Viana",s:"🔵 Não iniciado",d:"14/04→28/04"},
+    {n:"Chargeback",r:"Diego Viana",s:"🔵 Não iniciado",d:"14/04→28/04"},
+    {n:"Link de pagamento / smart checkout",r:"Diego Viana",s:"🔵 Não iniciado",d:"14/04→28/04"},
+  ]},
+  {nome:"Eventos / Webhooks",t:[
+    {n:"Implementação dos webhooks",r:"Diego Viana",s:"🟢 Concluído",d:"14/04→28/04"},
+    {n:"Processamento — retry",r:"Rafael Douglas",s:"🟡 Em andamento",d:"14/04→28/04"},
+    {n:"Idempotência",r:"Rafael Douglas",s:"🟢 Concluído",d:"01/04→14/04"},
+    {n:"Envio das informações VA",r:"—",s:"🔵 Não iniciado",d:"14/04→28/04"},
+  ]},
+  {nome:"Configurações Adquirentes",t:[
+    {n:"Configurações Getnet",r:"Leonardo",s:"🟡 Em andamento",d:"08/04→30/04"},
+    {n:"Configurações Pagarme",r:"Leonardo",s:"🟡 Em andamento",d:"08/04→30/04"},
+    {n:"Configurações Clearsales",r:"Leonardo",s:"🟡 Em andamento",d:"08/04→30/04"},
+    {n:"Configurar rotas",r:"Leonardo",s:"🟡 Em andamento",d:"08/04→30/04"},
+  ]},
+  {nome:"Regras de Negócio",t:[
+    {n:"Integração antifraude 3DS e Clearsales",r:"Paulo H.",s:"🟡 Em andamento",d:"09/04→30/04"},
+    {n:"Integração taxas entre adquirentes",r:"Paulo H.",s:"🔵 Não iniciado",d:""},
+    {n:"Definir roteamento (workflow)",r:"Paulo H.",s:"🟡 Em andamento",d:"09/04→30/04"},
+    {n:"Plano de fallback",r:"Paulo H.",s:"🟡 Em andamento",d:"09/04→30/04"},
+    {n:"Go live faseado",r:"Paulo H.",s:"🔵 Não iniciado",d:"09/04→30/04"},
+  ]},
+  {nome:"Integração com Canais",t:[
+    {n:"VA",r:"—",s:"🔵 Não iniciado",d:""},
+    {n:"Boitatá",r:"—",s:"🔵 Não iniciado",d:"14/04→30/04"},
+    {n:"B2B",r:"—",s:"🔵 Não iniciado",d:""},
+    {n:"Televendas",r:"—",s:"🔵 Não iniciado",d:""},
+  ]},
+  {nome:"Testes Integrados",t:[
+    {n:"VA",r:"—",s:"🔵 Não iniciado",d:""},
+    {n:"Boitatá",r:"—",s:"🔵 Não iniciado",d:""},
+    {n:"B2B",r:"—",s:"🔵 Não iniciado",d:""},
+    {n:"Televendas",r:"—",s:"🔵 Não iniciado",d:""},
+  ]},
+];
+
+const TEMAS=["Meios de Pagamento","LM Pay","Contas a Receber","Mesa de Crédito","Tesouraria","Antecipação","Reforma Tributária","Business Assurance","S4"];
+
+/* ═══ STORE (localStorage) ═══ */
+const KEY={rm:'lm_rm',bl:'lm_bl',prbs:'lm_prbs'};
+function load(k,seed){try{const v=localStorage.getItem(k);return v?JSON.parse(v):[...seed.map(x=>({...x}))]}catch{return[...seed.map(x=>({...x}))]}}
+function save(k,data){try{localStorage.setItem(k,JSON.stringify(data))}catch{}}
+
+let RM,BL,PRBS;
+function initStore(){
+  RM=load(KEY.rm,SEED_RM);
+  BL=load(KEY.bl,SEED_BL);
+  PRBS=load(KEY.prbs,SEED_PRBS);
+}
+
+/* ═══ HELPERS ═══ */
+function sc(s){
+  if(!s)return'idle';
+  if(s.includes('Concluído')||s.includes('Resolvido')||s.includes('Encerrado'))return'done';
+  if(s.includes('andamento')||s.includes('Análise'))return'wip';
+  if(s.includes('Bloqueado'))return'blk';
+  if(s.includes('testes')||s.includes('Homologação'))return'test';
+  if(s.includes('Não iniciado')||s.includes('Registrado'))return'new';
+  if(s.includes('Cancelado'))return'canc';
+  return'idle';
+}
+function pc(p){return{Alta:'p-alta',Crítica:'p-crit',Média:'p-media',Baixa:'p-baixa'}[p]||'';}
+function qc(q){return{Q1:'p-q1',Q2:'p-q2',Q3:'p-q3',Q4:'p-q4'}[q]||'p-idle';}
+function pill(t,c){return`<span class="pill ${c}">${t}</span>`;}
+function rice(r,i,c,e){if(!r||!e)return'—';return Math.round(r*i*c/e)}
+function riceStr(r,i,c,e){const v=rice(r,i,c,e);if(v==='—')return'<span style="color:var(--gray3)">—</span>';return`<span style="font-family:\'JetBrains Mono\',monospace;font-weight:500;color:var(--lm-d)">${Number(v).toLocaleString('pt-BR')}</span>`;}
+function fmtDate(s){if(!s)return'—';try{const d=new Date(s+'T00:00:00');return d.toLocaleDateString('pt-BR')}catch{return s}}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function today(){return new Date().toISOString().slice(0,10);}
+function addDays(d,n){const dt=new Date(d+'T00:00:00');dt.setDate(dt.getDate()+n);return dt.toISOString().slice(0,10);}
+
+/* ═══ PAGINATION ═══ */
+const PAGE_SIZE=15;
+let blPage=1,blSort={col:'rice',dir:-1},blFilterStatus='Todos',blFilterPrio='Todos',blSearch='';
+
+/* ═══ SIDEBAR & NAV ═══ */
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed');}
+const TITLES={dashboard:'Dashboard <span>/ Visão Executiva</span>',alertas:'Alertas <span>/ Painel de Alertas</span>',charts:'Gráficos <span>/ Analytics</span>',timeline:'Roadmap <span>/ Timeline 2026</span>',demandas:'Backlog <span>/ Demandas</span>',kanban:'Kanban <span>/ Iniciativas</span>',projetos:'Projetos <span>/ Yuno — Execução</span>',prbs:'PRBs <span>/ Incidentes</span>'};
+function go(name,el){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.sb-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tb-title').innerHTML=TITLES[name]||name;
+  document.getElementById('srch').value='';blSearch='';
+  if(name==='charts')setTimeout(buildCharts,100);
+}
+function doSearch(){blSearch=document.getElementById('srch').value.toLowerCase();blPage=1;const active=document.querySelector('.view.active');if(active?.id==='view-demandas')renderBl();}
+
+/* ═══ DASHBOARD ═══ */
+function buildDash(){
+  const cnt={done:0,wip:0,blk:0,test:0,new2:0,canc:0};
+  RM.forEach(r=>{const c=sc(r.status);if(c==='done')cnt.done++;else if(c==='wip')cnt.wip++;else if(c==='blk')cnt.blk++;else if(c==='test')cnt.test++;else if(c==='new')cnt.new2++;else if(c==='canc')cnt.canc++;});
+  document.getElementById('stats').innerHTML=`
+    <div class="stat-card grn"><div class="stat-icon">✅</div><div class="stat-num">${cnt.done}</div><div class="stat-lbl">Concluídas</div></div>
+    <div class="stat-card org"><div class="stat-icon">⚡</div><div class="stat-num">${cnt.wip}</div><div class="stat-lbl">Em andamento</div></div>
+    <div class="stat-card red"><div class="stat-icon">🚨</div><div class="stat-num">${cnt.blk}</div><div class="stat-lbl">Bloqueadas</div></div>
+    <div class="stat-card pur"><div class="stat-icon">🔬</div><div class="stat-num">${cnt.test}</div><div class="stat-lbl">Em testes</div></div>
+    <div class="stat-card blu"><div class="stat-icon">🔵</div><div class="stat-num">${cnt.new2}</div><div class="stat-lbl">Não iniciadas</div></div>
+    <div class="stat-card hero"><div class="stat-icon">🌿</div><div class="stat-num">${RM.length}</div><div class="stat-lbl">Total</div></div>
+  `;
+  const risks=RM.filter(r=>r.status.includes('Bloqueado')&&r.blocker&&r.blocker!=='—');
+  document.getElementById('dash-risks').innerHTML=risks.slice(0,5).map(r=>`
+    <div class="alert danger" onclick="openModal('rm','${r.id}')">
+      <div class="alert-icon">🚫</div>
+      <div class="alert-body"><div class="alert-title">${r.id} — ${r.name}</div><div class="alert-desc">⚠ ${r.blocker}</div></div>
+    </div>`).join('')||'<div class="empty"><div class="empty-icon">✅</div><p>Nenhuma iniciativa bloqueada</p></div>';
+
+  document.getElementById('temas').innerHTML=TEMAS.map(tema=>{
+    const tot=RM.filter(r=>r.tema===tema).length;
+    const done=RM.filter(r=>r.tema===tema&&r.status.includes('Concluído')).length;
+    const pct=tot?Math.round(done/tot*100):0;
+    return`<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:12px;font-weight:600">${tema}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gray3)">${done}/${tot} · ${pct}%</span>
+      </div>
+      <div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+
+  const done=RM.filter(r=>r.status.includes('Concluído'));
+  document.getElementById('done-tbl').innerHTML=done.map((r,i)=>`
+    <tr onclick="openModal('rm','${r.id}')" style="${i%2?'background:var(--bg3)':''}">
+      <td class="td-id">${r.id}</td><td class="td-name">${r.name}</td>
+      <td class="td-sm">${r.tema}</td><td class="td-sm">${r.resp}</td>
+      <td class="td-sm">${fmtDate(r.deadline)}</td>
+    </tr>`).join('');
+}
+
+/* ═══ ALERTAS ═══ */
+function buildAlertas(){
+  const now=new Date(); const tod=today(); const in3=addDays(tod,3);
+  const late=BL.filter(r=>r.deadline&&r.deadline<tod&&!r.status.includes('Concluído')&&!r.status.includes('Cancelado'));
+  const soon=BL.filter(r=>r.deadline&&r.deadline>=tod&&r.deadline<=in3&&!r.status.includes('Concluído'));
+  const noHist=BL.filter(r=>r.hist==='Não'&&!r.status.includes('Concluído')&&!r.status.includes('Cancelado'));
+  const incomplete=BL.filter(r=>(!r.resp||r.resp==='—')&&!r.status.includes('Concluído'));
+  const total=late.length+soon.length+noHist.length+incomplete.length;
+  document.getElementById('alerta-count').textContent=total;
+
+  const mkAlert=(r,cls,icon,extra)=>`<div class="alert ${cls}" onclick="openModal('bl','${r.id}')"><div class="alert-icon">${icon}</div><div class="alert-body"><div class="alert-title">${r.id} — ${r.name}</div><div class="alert-desc">${extra}</div></div></div>`;
+  document.getElementById('al-late').innerHTML=late.map(r=>mkAlert(r,'danger','📅',`Deadline: ${fmtDate(r.deadline)} · ${r.status}`)).join('')||'<div class="empty"><div class="empty-icon">✅</div><p>Nenhuma atrasada</p></div>';
+  document.getElementById('al-soon').innerHTML=soon.map(r=>mkAlert(r,'warn','⏰',`Vence em: ${fmtDate(r.deadline)}`)).join('')||'<div class="empty"><div class="empty-icon">✅</div><p>Nenhuma vencendo</p></div>';
+  document.getElementById('al-nohist').innerHTML=noHist.map(r=>mkAlert(r,'purple','📝',`História não criada · ${r.area}`)).join('')||'<div class="empty"><div class="empty-icon">✅</div><p>Todas com história</p></div>';
+  document.getElementById('al-incomplete').innerHTML=incomplete.map(r=>mkAlert(r,'info','⚠',`Sem responsável definido · ${r.area}`)).join('')||'<div class="empty"><div class="empty-icon">✅</div><p>Nenhuma incompleta</p></div>';
+}
+
+/* ═══ CHARTS ═══ */
+let chartsBuilt=false;
+const chartInstances={};
+function buildCharts(){
+  if(chartsBuilt){Object.values(chartInstances).forEach(c=>c.destroy());Object.keys(chartInstances).forEach(k=>delete chartInstances[k]);}
+  const lm='#7bb51c';const lmD='#5a8a0e';
+  const statusLabels=['Concluído','Em andamento','Bloqueado','Em testes','Não iniciado','Cancelado'];
+  const statusColors=['#16a34a','#d97706','#dc2626','#7c3aed','#2563eb','#9ca3af'];
+  const statusCounts=statusLabels.map(l=>RM.filter(r=>r.status.includes(l.split(' ')[0])||r.status.includes(l.split(' ').slice(-1)[0])).length);
+
+  chartInstances.status=new Chart(document.getElementById('chart-status'),{type:'doughnut',data:{labels:statusLabels,datasets:[{data:statusCounts,backgroundColor:statusColors,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10,family:'Nunito'},padding:10}}}}});
+
+  const temaLabels=TEMAS;const temaCounts=TEMAS.map(t=>RM.filter(r=>r.tema===t).length);
+  chartInstances.tema=new Chart(document.getElementById('chart-tema'),{type:'bar',data:{labels:temaLabels.map(t=>t.length>18?t.slice(0,16)+'…':t),datasets:[{data:temaCounts,backgroundColor:lm+'99',borderColor:lm,borderWidth:2,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{font:{size:10}}},x:{ticks:{font:{size:9}}}}}});
+
+  const qs=['Q1','Q2','Q3','Q4','—'];const qCounts=qs.map(q=>RM.filter(r=>r.q===q).length);
+  chartInstances.quarter=new Chart(document.getElementById('chart-quarter'),{type:'bar',data:{labels:qs,datasets:[{data:qCounts,backgroundColor:['#16a34a99','#2563eb99','#7c3aed99','#d9770699','#9ca3af99'],borderColor:['#16a34a','#2563eb','#7c3aed','#d97706','#9ca3af'],borderWidth:2,borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+
+  const prios=['Alta','Média','Baixa'];const prioCounts=prios.map(p=>BL.filter(b=>b.prio===p).length);
+  chartInstances.prio=new Chart(document.getElementById('chart-prio'),{type:'pie',data:{labels:prios,datasets:[{data:prioCounts,backgroundColor:['#dc262699','#d9770699','#16a34a99'],borderColor:['#dc2626','#d97706','#16a34a'],borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11,family:'Nunito'}}}}}});
+  chartsBuilt=true;
+}
+
+/* ═══ TIMELINE ═══ */
+let tlFilter='Todos';
+function buildTimeline(){
+  const opts=['Todos','🟢 Concluído','🟡 Em andamento','🟠 Bloqueado','🔵 Não iniciado','🟣 Em testes'];
+  document.getElementById('tl-filters').innerHTML=opts.map(s=>`<button class="fb ${s==='Todos'?'on':''}" onclick="setTlF('${s}',this)">${s}</button>`).join('');
+  renderTimeline();
+}
+function setTlF(v,btn){tlFilter=v;document.querySelectorAll('#tl-filters .fb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderTimeline();}
+function renderTimeline(){
+  const data=RM.filter(r=>tlFilter==='Todos'||r.status===tlFilter);
+  const groups={};TEMAS.forEach(t=>{groups[t]=[];});
+  data.forEach(r=>{if(groups[r.tema])groups[r.tema].push(r);});
+  let h=`<div class="tl-head"><div class="tl-head-lbl">Iniciativa</div><div class="tl-qhd q1">Q1</div><div class="tl-qhd q2">Q2</div><div class="tl-qhd q3">Q3</div><div class="tl-qhd q4">Q4</div></div>`;
+  TEMAS.forEach(tema=>{
+    const rows=groups[tema];if(!rows.length)return;
+    h+=`<div class="tl-group"><div class="tl-group-lbl">▸ ${tema} (${rows.length})</div>`;
+    rows.forEach(r=>{
+      const cls=sc(r.status);
+      const cells=['Q1','Q2','Q3','Q4'].map(q=>{
+        if(r.q===q)return`<div class="tl-cell"><div class="tl-bar ${cls}">${r.jira&&r.jira!=='—'?r.jira:r.status.slice(2)}</div></div>`;
+        if(r.q==='—'||r.q==='?')return q==='Q1'?`<div class="tl-cell"><div class="tl-bar idle">?</div></div>`:'<div class="tl-cell"></div>';
+        return'<div class="tl-cell"></div>';
+      }).join('');
+      h+=`<div class="tl-row" onclick="openModal('rm','${r.id}')"><div class="tl-row-name">${r.name}</div>${cells}</div>`;
+    });
+    h+='</div>';
+  });
+  document.getElementById('tl-inner').innerHTML=h;
+}
+
+/* ═══ BACKLOG ═══ */
+let blFilterResp='Todos';
+function buildBlFilters(){
+  const statOpts=['Todos','🟡 Em andamento','🟠 Bloqueado','🔵 Não iniciado','🟢 Concluído'];
+  const prioOpts=['Todos','Alta','Média','Baixa'];
+  document.getElementById('bl-filters').innerHTML=
+    statOpts.map(s=>`<button class="fb ${s==='Todos'?'on':''}" onclick="setBlFStatus('${s}',this)">${s}</button>`).join('')+
+    '<div class="filter-sep"></div>'+
+    prioOpts.map(p=>`<button class="fb" onclick="setBlFPrio('${p}',this)">${p}</button>`).join('');
+}
+function setBlFStatus(v,btn){blFilterStatus=v;document.querySelectorAll('#bl-filters .fb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');blPage=1;renderBl();}
+function setBlFPrio(v,btn){blFilterPrio=v;renderBl();}
+function sortBl(col){if(blSort.col===col)blSort.dir*=-1;else{blSort.col=col;blSort.dir=-1;}renderBl();}
+function renderBl(){
+  let data=BL.filter(r=>(blFilterStatus==='Todos'||r.status===blFilterStatus)&&(blFilterPrio==='Todos'||r.prio===blFilterPrio));
+  if(blSearch)data=data.filter(r=>[r.name,r.id,r.resp,r.area,r.sistema,r.tipo,r.comentarios||''].join(' ').toLowerCase().includes(blSearch));
+  data.sort((a,b)=>{
+    let va,vb;
+    if(blSort.col==='rice'){va=a.E?rice(a.R,a.I,a.C,a.E):0;vb=b.E?rice(b.R,b.I,b.C,b.E):0;}
+    else{va=(a[blSort.col]||'').toString().toLowerCase();vb=(b[blSort.col]||'').toString().toLowerCase();}
+    if(va<vb)return-blSort.dir;if(va>vb)return blSort.dir;return 0;
+  });
+  const total=data.length;const pages=Math.ceil(total/PAGE_SIZE)||1;
+  blPage=Math.min(blPage,pages);
+  const slice=data.slice((blPage-1)*PAGE_SIZE,blPage*PAGE_SIZE);
+  document.getElementById('sb-bl-cnt').textContent=total;
+  document.getElementById('bl-tbl').innerHTML=slice.map((r,i)=>`
+    <tr onclick="openModal('bl','${r.id}')" style="${i%2?'background:var(--bg3)':''}">
+      <td class="td-id">${r.id}</td>
+      <td class="td-name">${r.name}</td>
+      <td class="td-sm">${r.area}</td>
+      <td class="td-sm">${r.sistema}</td>
+      <td class="td-sm">${r.resp}</td>
+      <td>${pill(r.prio,pc(r.prio))}</td>
+      <td>${pill(r.status,'p-'+sc(r.status))}</td>
+      <td>${r.hist==='Sim'?'<span class="pill p-sim">✓ Sim</span>':'<span class="pill p-nao">✗ Não</span>'}</td>
+      <td>${riceStr(r.R,r.I,r.C,r.E)}</td>
+      <td class="td-jira">${r.jira&&r.jira!=='—'?r.jira:'—'}</td>
+      <td onclick="event.stopPropagation()">
+        <button class="tb-btn secondary" style="padding:4px 8px;font-size:10px" onclick="openCrudForm('bl','${r.id}')">✏</button>
+        <button class="tb-btn secondary" style="padding:4px 8px;font-size:10px;color:var(--red)" onclick="deleteBl('${r.id}')">🗑</button>
+      </td>
+    </tr>`).join('');
+  buildPager('bl-pager',blPage,pages,p=>{blPage=p;renderBl();},total,slice.length);
+}
+
+/* ═══ PAGER ═══ */
+function buildPager(id,page,pages,cb,total,showing){
+  const el=document.getElementById(id);if(!el)return;
+  let btns='';
+  const start=Math.max(1,page-2),end=Math.min(pages,page+2);
+  if(start>1)btns+=`<button class="pager-btn" onclick="(${cb})(1)">1</button>`;
+  if(start>2)btns+=`<button class="pager-btn" disabled>…</button>`;
+  for(let p=start;p<=end;p++)btns+=`<button class="pager-btn ${p===page?'on':''}" onclick="(${cb})(${p})">${p}</button>`;
+  if(end<pages-1)btns+=`<button class="pager-btn" disabled>…</button>`;
+  if(end<pages)btns+=`<button class="pager-btn" onclick="(${cb})(${pages})">${pages}</button>`;
+  el.innerHTML=`<div class="pager-info">Mostrando ${showing} de ${total} itens</div><div class="pager-btns">${btns}</div>`;
+}
+
+/* ═══ KANBAN ═══ */
+const KB_COLS=[{key:'done',label:'Concluído',color:'var(--green)'},{key:'wip',label:'Em andamento',color:'var(--orange)'},{key:'blk',label:'Bloqueado',color:'var(--red)'},{key:'test',label:'Em testes',color:'var(--purple)'},{key:'new',label:'Não iniciado',color:'var(--blue)'}];
+let kbFilter='Todos';
+function buildKanban(){
+  const resps=['Todos',...new Set(RM.map(r=>r.resp))].sort((a,b)=>a==='Todos'?-1:a.localeCompare(b));
+  document.getElementById('kb-filters').innerHTML=resps.map(r=>`<button class="fb ${r==='Todos'?'on':''}" onclick="setKbF('${r}',this)">${r}</button>`).join('');
+  renderKanban();
+}
+function setKbF(v,btn){kbFilter=v;document.querySelectorAll('#kb-filters .fb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderKanban();}
+function renderKanban(){
+  const data=RM.filter(r=>kbFilter==='Todos'||r.resp===kbFilter);
+  document.getElementById('kanban-board').innerHTML=KB_COLS.map(col=>{
+    const cards=data.filter(r=>sc(r.status)===col.key);
+    return`<div class="kol"><div class="kol-hd"><div class="kol-title" style="color:${col.color}">${col.label}</div><div class="kol-n">${cards.length}</div></div>
+    <div class="kol-cards">${cards.map(r=>`
+      <div class="kcard ${col.key}" onclick="openModal('rm','${r.id}')">
+        <div class="kc-id">${r.id} · ${r.q||'?'} · ${r.jira&&r.jira!=='—'?r.jira:'sem jira'}</div>
+        <div class="kc-title">${r.name}</div>
+        ${r.blocker&&r.blocker!=='—'?`<div class="kc-blk">⚠ ${r.blocker}</div>`:''}
+        <div class="kc-foot">${pill(r.tema.split(' ')[0],'p-idle')}<span class="kc-resp">${r.resp}</span></div>
+      </div>`).join('')||'<div style="text-align:center;padding:20px;color:var(--gray3);font-size:12px">Nenhuma</div>'}</div></div>`;
+  }).join('');
+}
+
+/* ═══ PROJETOS ═══ */
+/* ═══ PROJECTS STORE ═══ */
+const KEY_PROJ='lm_projects';
+const SEED_PROJECTS=[
+  {
+    id:'PROJ-001',
+    idInic:'FP-002',jira:'PEC-124',nome:'Orquestração de Pagamentos — Yuno',
+    resp:'Leonardo',deadline:'2026-03-30',status:'🟡 Em andamento',
+    obs:'Go live faseado pendente. Conciliação com Y Tecnologia em definição.',
+    epicos:[
+      {id:'EP-001',nome:'Modelo de Pagamento',tarefas:[
+        {id:'T-001',n:'Definir entidades de pagamento',r:'Rafael Douglas',s:'🟡 Em andamento',d:''},
+        {id:'T-002',n:'Definir status do pedido',r:'Rafael Douglas',s:'🟡 Em andamento',d:''},
+        {id:'T-003',n:'Definir tabelas de pagamento',r:'—',s:'🔵 Não iniciado',d:''},
+      ]},
+      {id:'EP-002',nome:'Tokenização',tarefas:[
+        {id:'T-004',n:'Definir fluxo',r:'Rafael Douglas',s:'🟢 Concluído',d:'01/04→14/04'},
+        {id:'T-005',n:'Endpoint de tokenização',r:'Rafael Douglas',s:'🟢 Concluído',d:'01/04→14/04'},
+        {id:'T-006',n:'Endpoint de verify',r:'Rafael Douglas',s:'🟢 Concluído',d:'01/04→14/04'},
+        {id:'T-007',n:'Validar integração SDK Yuno',r:'Rafael Douglas',s:'🟢 Concluído',d:'01/04→14/04'},
+        {id:'T-008',n:'Tela de teste de Tokenização',r:'Rafael Douglas',s:'🟢 Concluído',d:'01/04→14/04'},
+        {id:'T-009',n:'Documentação',r:'—',s:'🟡 Em andamento',d:'01/04→14/04'},
+        {id:'T-010',n:'Homologação',r:'Leonardo',s:'🔵 Não iniciado',d:'01/04→14/04'},
+        {id:'T-011',n:'Validar com PCI',r:'Leonardo',s:'🔵 Não iniciado',d:'14/04→28/04'},
+      ]},
+      {id:'EP-003',nome:'Client de Integração com Yuno',tarefas:[
+        {id:'T-012',n:'Implementar cliente http',r:'Rafael Douglas',s:'🟢 Concluído',d:''},
+        {id:'T-013',n:'Configurar APIKeys',r:'Tiago Kihara',s:'🟢 Concluído',d:''},
+        {id:'T-014',n:'Configurar timeout, retry e circuit breaker',r:'Rafael Douglas',s:'🟢 Concluído',d:''},
+      ]},
+      {id:'EP-004',nome:'Fluxos de Pagamento Cartão',tarefas:[
+        {id:'T-015',n:'Criação de pagamento 1P (pré autorizado)',r:'Rafael Douglas',s:'🟡 Em andamento',d:'01/04→14/04'},
+        {id:'T-016',n:'Criação de pagamento 3P',r:'Rafael Douglas',s:'🔵 Não iniciado',d:'01/04→14/04'},
+        {id:'T-017',n:'Captura 1P',r:'Rafael Douglas',s:'🟡 Em andamento',d:'01/04→14/04'},
+        {id:'T-018',n:'Cancelamento 1P',r:'Diego Viana',s:'🔵 Não iniciado',d:'01/04→14/04'},
+        {id:'T-019',n:'Reembolso 1P',r:'Diego Viana',s:'🔵 Não iniciado',d:'14/04→28/04'},
+        {id:'T-020',n:'Chargeback',r:'Diego Viana',s:'🔵 Não iniciado',d:'14/04→28/04'},
+        {id:'T-021',n:'Link de pagamento / smart checkout',r:'Diego Viana',s:'🔵 Não iniciado',d:'14/04→28/04'},
+      ]},
+      {id:'EP-005',nome:'Eventos / Webhooks',tarefas:[
+        {id:'T-022',n:'Implementação dos webhooks',r:'Diego Viana',s:'🟢 Concluído',d:'14/04→28/04'},
+        {id:'T-023',n:'Processamento — retry',r:'Rafael Douglas',s:'🟡 Em andamento',d:'14/04→28/04'},
+        {id:'T-024',n:'Idempotência',r:'Rafael Douglas',s:'🟢 Concluído',d:'01/04→14/04'},
+        {id:'T-025',n:'Envio das informações VA',r:'—',s:'🔵 Não iniciado',d:'14/04→28/04'},
+      ]},
+      {id:'EP-006',nome:'Configurações Adquirentes',tarefas:[
+        {id:'T-026',n:'Configurações Getnet',r:'Leonardo',s:'🟡 Em andamento',d:'08/04→30/04'},
+        {id:'T-027',n:'Configurações Pagarme',r:'Leonardo',s:'🟡 Em andamento',d:'08/04→30/04'},
+        {id:'T-028',n:'Configurações Clearsales',r:'Leonardo',s:'🟡 Em andamento',d:'08/04→30/04'},
+        {id:'T-029',n:'Configurar rotas',r:'Leonardo',s:'🟡 Em andamento',d:'08/04→30/04'},
+      ]},
+      {id:'EP-007',nome:'Regras de Negócio',tarefas:[
+        {id:'T-030',n:'Integração antifraude 3DS e Clearsales',r:'Paulo H.',s:'🟡 Em andamento',d:'09/04→30/04'},
+        {id:'T-031',n:'Definir roteamento (workflow)',r:'Paulo H.',s:'🟡 Em andamento',d:'09/04→30/04'},
+        {id:'T-032',n:'Plano de fallback',r:'Paulo H.',s:'🟡 Em andamento',d:'09/04→30/04'},
+        {id:'T-033',n:'Go live faseado',r:'Paulo H.',s:'🔵 Não iniciado',d:'09/04→30/04'},
+      ]},
+      {id:'EP-008',nome:'Testes Integrados',tarefas:[
+        {id:'T-034',n:'VA',r:'—',s:'🔵 Não iniciado',d:''},
+        {id:'T-035',n:'Boitatá',r:'—',s:'🔵 Não iniciado',d:'14/04→30/04'},
+        {id:'T-036',n:'B2B',r:'—',s:'🔵 Não iniciado',d:''},
+        {id:'T-037',n:'Televendas',r:'—',s:'🔵 Não iniciado',d:''},
+      ]},
+    ]
+  }
+];
+
+let PROJECTS;
+function initProjects(){
+  try{const v=localStorage.getItem(KEY_PROJ);PROJECTS=v?JSON.parse(v):deepClone(SEED_PROJECTS);}
+  catch{PROJECTS=deepClone(SEED_PROJECTS);}
+}
+function saveProjects(){try{localStorage.setItem(KEY_PROJ,JSON.stringify(PROJECTS));}catch{}}
+function deepClone(x){return JSON.parse(JSON.stringify(x));}
+
+/* ═══ BUILD PROJETOS ═══ */
+function buildProjetos(){
+  if(!PROJECTS||!PROJECTS.length){
+    document.getElementById('proj-content').innerHTML='<div class="empty"><div class="empty-icon">📁</div><p>Nenhum projeto cadastrado. Clique em "+ Novo Projeto" para começar.</p></div>';
+    return;
+  }
+  const el=document.getElementById('proj-content');
+  el.innerHTML='<div class="proj-accordion" id="proj-accordion">'+PROJECTS.map(p=>renderProjectCard(p)).join('')+'</div>';
+  // animate bars
+  setTimeout(()=>{el.querySelectorAll('.prog-fill,.epic-fill').forEach(e=>{const w=e.style.width;e.style.width='0';setTimeout(()=>e.style.width=w,80);});},100);
+}
+
+function renderProjectCard(p){
+  const allT=p.epicos.flatMap(e=>e.tarefas);
+  const done=allT.filter(t=>t.s.includes('Concluído')).length;
+  const pct=allT.length?Math.round(done/allT.length*100):0;
+  const cls=sc(p.status);
+  return`<div class="proj-card" id="pcard-${p.id}">
+    <div class="proj-card-hd" id="phd-${p.id}" onclick="toggleProject('${p.id}')">
+      <span class="proj-card-toggle">▾</span>
+      <div class="proj-card-info">
+        <div class="proj-card-tag">${p.idInic||'—'} · ${p.jira||'—'} · ${fmtDate(p.deadline)}</div>
+        <div class="proj-card-name">${p.nome}</div>
+        <div class="proj-card-sub">${p.resp} · ${p.epicos.length} épicos · ${allT.length} tarefas · ${done} concluídas</div>
+      </div>
+      <div class="proj-card-right">
+        ${pill(p.status,'p-'+sc(p.status))}
+        <div class="proj-pct-box"><div class="proj-pct-num">${pct}%</div><div class="proj-pct-lbl">feito</div></div>
+        <div onclick="event.stopPropagation()" style="display:flex;gap:4px">
+          <button class="tb-btn secondary" style="padding:5px 8px;font-size:11px" onclick="openProjectForm('${p.id}')">✏</button>
+          <button class="tb-btn secondary" style="padding:5px 8px;font-size:11px;color:var(--red)" onclick="deleteProject('${p.id}')">🗑</button>
+        </div>
+      </div>
+    </div>
+    <div class="proj-card-body" id="pbody-${p.id}">
+      <div class="proj-prog-wrap">
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:11px;color:var(--gray3)">
+          <span>Progresso geral</span><span>${done}/${allT.length} tarefas</span>
+        </div>
+        <div class="prog-track" style="height:8px"><div class="prog-fill" style="width:${pct}%"></div></div>
+      </div>
+      ${p.obs?`<div style="font-size:12px;color:var(--gray2);background:var(--bg3);border-radius:8px;padding:10px 14px;margin-bottom:14px">💬 ${p.obs}</div>`:''}
+      <div class="epics">
+        ${p.epicos.map((ep,ei)=>renderEpic(p.id,ep,ei)).join('')}
+      </div>
+      <div class="proj-actions">
+        <button class="tb-btn secondary" style="font-size:11px" onclick="openEpicForm('${p.id}')">+ Adicionar Épico</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderEpic(pid,ep,ei){
+  const done=ep.tarefas.filter(t=>t.s.includes('Concluído')).length;
+  const pct=ep.tarefas.length?Math.round(done/ep.tarefas.length*100):0;
+  const eid=`${pid}-${ep.id}`;
+  return`<div class="epic" id="ep-${eid}">
+    <div class="epic-hd" onclick="toggleEp('${eid}')">
+      <span style="font-size:13px">📦</span>
+      <span class="epic-name">${ep.nome}</span>
+      <div class="epic-stats">
+        <div class="epic-track"><div class="epic-fill" style="width:${pct}%"></div></div>
+        <span class="epic-frac">${done}/${ep.tarefas.length}</span>
+        ${pill(pct===100?'✓ Completo':done>0?'Em andamento':'Não iniciado',pct===100?'p-done':done>0?'p-wip':'p-new')}
+      </div>
+      <div onclick="event.stopPropagation()" style="display:flex;gap:4px;margin-left:8px">
+        <button class="tb-btn secondary" style="padding:3px 7px;font-size:10px" onclick="openTaskForm('${pid}','${ep.id}')">+ Tarefa</button>
+        <button class="tb-btn secondary" style="padding:3px 7px;font-size:10px;color:var(--red)" onclick="deleteEpic('${pid}','${ep.id}')">🗑</button>
+      </div>
+      <span class="epic-chev">▾</span>
+    </div>
+    <div class="tasks" id="tl-${eid}">
+      <div class="trow trow-hd"><span></span><span>Tarefa</span><span>Responsável</span><span>Status</span><span>Datas</span><span></span></div>
+      ${ep.tarefas.map(t=>renderTask(pid,ep.id,t)).join('')}
+    </div>
+  </div>`;
+}
+
+function renderTask(pid,epid,t){
+  const d=t.s.includes('Concluído');
+  return`<div class="trow">
+    <div class="tchk ${d?'ok':''}" onclick="toggleTask('${pid}','${epid}','${t.id}')" style="cursor:pointer" title="Clique para alternar status"></div>
+    <div class="tname ${d?'done-t':''}">${t.n}</div>
+    <div class="tresp">${t.r}</div>
+    <div>${pill(t.s,'p-'+sc(t.s))}</div>
+    <div class="tdate">${t.d||''}</div>
+    <div onclick="event.stopPropagation()" style="display:flex;gap:3px">
+      <button class="tb-btn secondary" style="padding:2px 6px;font-size:10px" onclick="openTaskForm('${pid}','${epid}','${t.id}')">✏</button>
+      <button class="tb-btn secondary" style="padding:2px 6px;font-size:10px;color:var(--red)" onclick="deleteTask('${pid}','${epid}','${t.id}')">🗑</button>
+    </div>
+  </div>`;
+}
+
+function toggleProject(pid){
+  const hd=document.getElementById('phd-'+pid);
+  const body=document.getElementById('pbody-'+pid);
+  const collapsed=hd.classList.toggle('collapsed-proj');
+  body.style.display=collapsed?'none':'block';
+}
+function toggleEp(eid){
+  const ep=document.getElementById('ep-'+eid);
+  const tl=document.getElementById('tl-'+eid);
+  const c=ep.classList.toggle('collapsed');
+  tl.style.display=c?'none':'flex';
+  tl.style.flexDirection='column';
+}
+function toggleTask(pid,epid,tid){
+  const p=PROJECTS.find(x=>x.id===pid);if(!p)return;
+  const ep=p.epicos.find(x=>x.id===epid);if(!ep)return;
+  const t=ep.tarefas.find(x=>x.id===tid);if(!t)return;
+  t.s=t.s.includes('Concluído')?'🔵 Não iniciado':'🟢 Concluído';
+  saveProjects();buildProjetos();
+}
+
+/* ═══ PROJECT FORMS ═══ */
+const PROJ_STATUS=STATUS_OPTS;
+function openProjectForm(pid=null){
+  const p=pid?PROJECTS.find(x=>x.id===pid):{};const title=pid?'Editar Projeto':'Novo Projeto';
+  const h=`<div class="modal-header"><div><span class="modal-id-tag">${pid||'NOVO'}</span><div class="modal-title">${title}</div></div><span class="modal-x" onclick="closeFM()">✕</span></div>
+  <div class="modal-body"><form id="crud-form" onsubmit="saveProject(event,'${pid||''}')">
+    <div class="form-grid">
+      <div class="form-group full req"><label>Nome do Projeto</label><input type="text" name="nome" value="${p.nome||''}" placeholder="Ex: Conciliação Marketplace — Koncili" required></div>
+      <div class="form-group req"><label>Responsável</label><input type="text" name="resp" value="${p.resp||''}" placeholder="Ex: Paulo" required></div>
+      <div class="form-group req"><label>Status</label>${sel('status',PROJ_STATUS,p.status,'required')}</div>
+      <div class="form-group"><label>ID Iniciativa (Roadmap)</label><input type="text" name="idInic" value="${p.idInic||''}" placeholder="Ex: FP-041"></div>
+      <div class="form-group"><label>Jira / PEC</label><input type="text" name="jira" value="${p.jira||''}" placeholder="Ex: PEC-125"></div>
+      <div class="form-group"><label>Deadline</label><input type="date" name="deadline" value="${p.deadline||''}"></div>
+      <div class="form-group full"><label>Observações</label><textarea name="obs" placeholder="Contexto, bloqueadores, atualizações...">${p.obs||''}</textarea></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button type="button" class="tb-btn secondary" onclick="closeFM()">Cancelar</button>
+      <button type="submit" class="tb-btn primary">💾 ${pid?'Salvar':'Criar Projeto'}</button>
+    </div>
+  </form></div>`;
+  document.getElementById('form-modal').innerHTML=h;
+  document.getElementById('form-overlay').classList.add('open');
+}
+
+function openEpicForm(pid){
+  const h=`<div class="modal-header"><div><span class="modal-id-tag">NOVO ÉPICO</span><div class="modal-title">Adicionar Épico ao Projeto</div></div><span class="modal-x" onclick="closeFM()">✕</span></div>
+  <div class="modal-body"><form id="crud-form" onsubmit="saveEpic(event,'${pid}')">
+    <div class="form-group full req" style="margin-bottom:14px"><label>Nome do Épico / Entregável</label><input type="text" name="nome" placeholder="Ex: Fluxos de Pagamento Cartão" required></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button type="button" class="tb-btn secondary" onclick="closeFM()">Cancelar</button>
+      <button type="submit" class="tb-btn primary">💾 Criar Épico</button>
+    </div>
+  </form></div>`;
+  document.getElementById('form-modal').innerHTML=h;
+  document.getElementById('form-overlay').classList.add('open');
+}
+
+function openTaskForm(pid,epid,tid=null){
+  const p=PROJECTS.find(x=>x.id===pid);
+  const ep=p?.epicos.find(x=>x.id===epid);
+  const t=tid?ep?.tarefas.find(x=>x.id===tid):{};
+  const title=tid?'Editar Tarefa':'Nova Tarefa';
+  const h=`<div class="modal-header"><div><span class="modal-id-tag">${ep?.nome||'Épico'}</span><div class="modal-title">${title}</div></div><span class="modal-x" onclick="closeFM()">✕</span></div>
+  <div class="modal-body"><form id="crud-form" onsubmit="saveTask(event,'${pid}','${epid}','${tid||''}')">
+    <div class="form-grid">
+      <div class="form-group full req"><label>Nome da Tarefa</label><input type="text" name="n" value="${t.n||''}" placeholder="Ex: Implementar cliente http" required></div>
+      <div class="form-group req"><label>Responsável</label><input type="text" name="r" value="${t.r||''}" placeholder="Ex: Rafael Douglas" required></div>
+      <div class="form-group req"><label>Status</label>${sel('s',STATUS_OPTS,t.s,'required')}</div>
+      <div class="form-group"><label>Datas (livre)</label><input type="text" name="d" value="${t.d||''}" placeholder="Ex: 01/04→14/04"></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+      <button type="button" class="tb-btn secondary" onclick="closeFM()">Cancelar</button>
+      <button type="submit" class="tb-btn primary">💾 ${tid?'Salvar':'Criar Tarefa'}</button>
+    </div>
+  </form></div>`;
+  document.getElementById('form-modal').innerHTML=h;
+  document.getElementById('form-overlay').classList.add('open');
+}
+
+function saveProject(e,pid){
+  e.preventDefault();const d=getForm();
+  const rec={
+    id:pid||'PROJ-'+uid(),
+    nome:d.nome,resp:d.resp,status:d.status,
+    idInic:d.idInic||'—',jira:d.jira||'—',
+    deadline:d.deadline||'',obs:d.obs||'',
+    epicos:pid?(PROJECTS.find(x=>x.id===pid)?.epicos||[]):[]
+  };
+  if(pid){const i=PROJECTS.findIndex(x=>x.id===pid);if(i>-1)PROJECTS[i]=rec;}
+  else PROJECTS.push(rec);
+  saveProjects();closeFM();buildProjetos();
+}
+function saveEpic(e,pid){
+  e.preventDefault();const d=getForm();
+  const p=PROJECTS.find(x=>x.id===pid);if(!p)return;
+  p.epicos.push({id:'EP-'+uid(),nome:d.nome,tarefas:[]});
+  saveProjects();closeFM();buildProjetos();
+}
+function saveTask(e,pid,epid,tid){
+  e.preventDefault();const d=getForm();
+  const p=PROJECTS.find(x=>x.id===pid);if(!p)return;
+  const ep=p.epicos.find(x=>x.id===epid);if(!ep)return;
+  const rec={id:tid||'T-'+uid(),n:d.n,r:d.r,s:d.s,d:d.d||''};
+  if(tid){const i=ep.tarefas.findIndex(x=>x.id===tid);if(i>-1)ep.tarefas[i]=rec;}
+  else ep.tarefas.push(rec);
+  saveProjects();closeFM();buildProjetos();
+}
+function deleteProject(pid){
+  if(!confirm('Excluir este projeto e todos os seus épicos e tarefas?'))return;
+  const i=PROJECTS.findIndex(x=>x.id===pid);if(i>-1){PROJECTS.splice(i,1);saveProjects();buildProjetos();}
+}
+function deleteEpic(pid,epid){
+  if(!confirm('Excluir este épico e todas as suas tarefas?'))return;
+  const p=PROJECTS.find(x=>x.id===pid);if(!p)return;
+  const i=p.epicos.findIndex(x=>x.id===epid);if(i>-1){p.epicos.splice(i,1);saveProjects();buildProjetos();}
+}
+function deleteTask(pid,epid,tid){
+  if(!confirm('Excluir esta tarefa?'))return;
+  const p=PROJECTS.find(x=>x.id===pid);if(!p)return;
+  const ep=p.epicos.find(x=>x.id===epid);if(!ep)return;
+  const i=ep.tarefas.findIndex(x=>x.id===tid);if(i>-1){ep.tarefas.splice(i,1);saveProjects();buildProjetos();}
+}
+
+/* ═══ PRBs ═══ */
+const PRB_SC={'🔵 Registrado':'p-new','🟡 Em Análise':'p-wip','🟣 Em Homologação':'p-test','🟢 Resolvido':'p-done','⚫ Encerrado':'p-canc'};
+function buildPrbs(){
+  document.getElementById('sb-prb-cnt').textContent=PRBS.filter(p=>!p.status.includes('Encerrado')&&!p.status.includes('Resolvido')).length;
+  document.getElementById('prb-content').innerHTML=PRBS.map(p=>{
+    const cls=p.status.includes('Registrado')?'crit':p.status.includes('Homologação')||p.status.includes('Análise')?'alto':p.status.includes('Resolvido')||p.status.includes('Encerrado')?'ok2':'med';
+    return`<div class="prb ${cls}">
+      <div class="prb-top"><div><div class="prb-num">${p.num} · ${fmtDate(p.data)} · ${p.inic}</div><div class="prb-title">${p.title}</div></div>
+        <div class="prb-pills">${pill(p.status,PRB_SC[p.status]||'p-idle')} ${pill(p.imp,p.imp==='Crítico'?'p-crit':p.imp==='Alto'?'p-alta':'p-media')}</div>
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <button class="tb-btn secondary" style="padding:4px 8px;font-size:10px" onclick="openCrudForm('prb','${p.id}')">✏</button>
+          <button class="tb-btn secondary" style="padding:4px 8px;font-size:10px;color:var(--red)" onclick="deletePrb('${p.id}')">🗑</button>
+        </div>
+      </div>
+      <div class="prb-section"><div class="prb-lbl">Descrição</div><div class="prb-text">${p.desc}</div></div>
+      <div class="prb-section"><div class="prb-lbl">Contorno</div><div class="prb-text">→ ${p.contorno}</div></div>
+      <div class="prb-section"><div class="prb-lbl">Solução definitiva</div><div class="prb-text">✓ ${p.def}</div></div>
+    </div>`;
+  }).join('');
+}
+
+/* ═══ MODAL (VIEW) ═══ */
+function openModal(type,id){
+  let h='';
+  if(type==='rm'){
+    const r=RM.find(x=>x.id===id);if(!r)return;
+    h=`<div class="modal-header"><div><span class="modal-id-tag">${r.id} · ${r.jira&&r.jira!=='—'?r.jira:'sem Jira'}</span><div class="modal-title">${r.name}</div></div><span class="modal-x" onclick="closeVM()">✕</span></div>
+    <div class="modal-body">
+      <div class="mf-grid">
+        <div class="mf"><label>Status</label>${pill(r.status,'p-'+sc(r.status))}</div>
+        <div class="mf"><label>Quarter</label>${pill(r.q||'—',qc(r.q))}</div>
+        <div class="mf"><label>Tema</label><p>${r.tema}</p></div>
+        <div class="mf"><label>Responsável</label><p>${r.resp}</p></div>
+        <div class="mf"><label>Deadline</label><p>${fmtDate(r.deadline)}</p></div>
+        <div class="mf"><label>Jira / PEC</label><p style="font-family:'JetBrains Mono',monospace;color:var(--lm-d)">${r.jira||'—'}</p></div>
+      </div>
+      <div class="m-div"></div>
+      <div class="mf" style="margin-bottom:10px"><label>Bloqueador</label><p style="color:${r.blocker&&r.blocker!=='—'?'var(--red)':'var(--gray3)'}">${r.blocker&&r.blocker!=='—'?'⚠ '+r.blocker:'Nenhum bloqueador'}</p></div>
+      <div class="mf" style="margin-bottom:10px"><label>Integrações</label><p>${r.integracoes||'—'}</p></div>
+      <div class="mf"><label>Comentários</label><p>${r.obs||'—'}</p></div>
+    </div>
+    <div class="modal-footer">
+      <button class="tb-btn secondary" onclick="closeVM()">Fechar</button>
+      <button class="tb-btn primary" onclick="closeVM();openCrudForm('rm','${r.id}')">✏ Editar</button>
+    </div>`;
+  } else {
+    const r=BL.find(x=>x.id===id);if(!r)return;
+    const rv=r.E?rice(r.R,r.I,r.C,r.E):null;
+    h=`<div class="modal-header"><div><span class="modal-id-tag">${r.id} → ${r.idInic}</span><div class="modal-title">${r.name}</div></div><span class="modal-x" onclick="closeVM()">✕</span></div>
+    <div class="modal-body">
+      <div class="mf-grid">
+        <div class="mf"><label>Área</label><p>${r.area}</p></div>
+        <div class="mf"><label>Sistema</label><p>${r.sistema}</p></div>
+        <div class="mf"><label>Tipo</label><p>${r.tipo}</p></div>
+        <div class="mf"><label>Responsável</label><p>${r.resp}</p></div>
+        <div class="mf"><label>Prioridade</label>${pill(r.prio,pc(r.prio))}</div>
+        <div class="mf"><label>Status</label>${pill(r.status,'p-'+sc(r.status))}</div>
+        <div class="mf"><label>História Criada</label><span class="${r.hist==='Sim'?'hist-badge hist-yes':'hist-badge hist-no'}">${r.hist==='Sim'?'✓ Sim':'✗ Não'}</span></div>
+        <div class="mf"><label>Deadline</label><p>${fmtDate(r.deadline)}</p></div>
+      </div>
+      <div class="m-div"></div>
+      ${rv?`<div class="rice-box"><div class="rice-num">${Number(rv).toLocaleString('pt-BR')}</div><div class="rice-lbl">Score RICE</div><div class="rice-formula">R:${r.R} × I:${r.I} × C:${r.C}% ÷ E:${r.E}</div></div>`:`<p style="color:var(--gray3);font-size:12px;text-align:center;padding:12px">RICE não calculado — preencha R, I, C, E</p>`}
+      ${r.comentarios?`<div class="mf" style="margin-top:14px"><label>Comentários</label><p>${r.comentarios}</p></div>`:''}
+    </div>
+    <div class="modal-footer">
+      <button class="tb-btn secondary" onclick="closeVM()">Fechar</button>
+      <button class="tb-btn primary" onclick="closeVM();openCrudForm('bl','${r.id}')">✏ Editar</button>
+    </div>`;
+  }
+  document.getElementById('view-modal').innerHTML=h;
+  document.getElementById('view-overlay').classList.add('open');
+}
+function closeVM(){document.getElementById('view-overlay').classList.remove('open');}
+function closeOverlay(e){if(e.target===document.getElementById('view-overlay'))closeVM();}
+
+/* ═══ CRUD FORM ═══ */
+const STATUS_OPTS=['🔵 Não iniciado','🟡 Em andamento','🟠 Bloqueado','🟣 Em testes','🟢 Concluído','⚫ Cancelado','⬜ Não priorizado'];
+const PRIO_OPTS=['Crítica','Alta','Média','Baixa'];
+const TIPO_OPTS=['Melhoria','Projeto','Iniciativa','Correção','Outros'];
+const AREA_OPTS=['Contas a Receber','Mesa de Crédito','Tesouraria','Antecipação','Reforma Tributária','Business Assurance','S4','Meios de Pagamento','LM Pay'];
+const SIS_OPTS=['SAP','HUB','VA','Hybris','Qlik','Service Now','Portal Nexxera','Yuno','—','Outros'];
+const Q_OPTS=['Q1','Q2','Q3','Q4','—','?'];
+const IMP_OPTS=['Crítico','Alto','Médio','Baixo'];
+const PRB_STATUS=['🔵 Registrado','🟡 Em Análise','🟣 Em Homologação','🟢 Resolvido','⚫ Encerrado'];
+
+function sel(name,opts,val,req=''){return`<select name="${name}" ${req}>${opts.map(o=>`<option value="${o}" ${val===o?'selected':''}>${o}</option>`).join('')}</select>`;}
+function inp(name,val,type='text',ph='',req=''){return`<input type="${type}" name="${name}" value="${val||''}" placeholder="${ph}" ${req}>`;}
+function ta(name,val,ph=''){return`<textarea name="${name}" placeholder="${ph}">${val||''}</textarea>`;}
+
+function openCrudForm(type,id=null){
+  let h='';
+  if(type==='bl'){
+    const r=id?BL.find(x=>x.id===id):{};const title=id?'Editar Demanda':'Nova Demanda';
+    h=`<div class="modal-header"><div><span class="modal-id-tag">${id||'NOVA'}</span><div class="modal-title">${title}</div></div><span class="modal-x" onclick="closeFM()">✕</span></div>
+    <div class="modal-body"><form id="crud-form" onsubmit="saveBl(event,'${id||''}')">
+      <div class="form-grid">
+        <div class="form-group full req"><label>Nome da Demanda</label>${inp('name',r.name,'text','Ex: Automatização conciliação...','required')}</div>
+        <div class="form-group req"><label>Área</label>${sel('area',AREA_OPTS,r.area,'required')}</div>
+        <div class="form-group req"><label>Sistema</label>${sel('sistema',SIS_OPTS,r.sistema,'required')}</div>
+        <div class="form-group req"><label>Tipo</label>${sel('tipo',TIPO_OPTS,r.tipo,'required')}</div>
+        <div class="form-group req"><label>Responsável</label>${inp('resp',r.resp,'text','Ex: Diego, Paulo...','required')}</div>
+        <div class="form-group req"><label>Prioridade</label>${sel('prio',PRIO_OPTS,r.prio,'required')}</div>
+        <div class="form-group req"><label>Status</label>${sel('status',STATUS_OPTS,r.status,'required')}</div>
+        <div class="form-group req"><label>História Criada</label>${sel('hist',['Sim','Não'],r.hist,'required')}</div>
+        <div class="form-group"><label>ID Iniciativa (Roadmap)</label>${inp('idInic',r.idInic,'text','Ex: FP-002')}</div>
+        <div class="form-group"><label>Jira / PEC</label>${inp('jira',r.jira,'text','Ex: PEC-124')}</div>
+        <div class="form-group"><label>Deadline</label>${inp('deadline',r.deadline,'date')}</div>
+        <div class="form-group" style="grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+          <div><label style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--gray3);display:block;margin-bottom:4px">R (Reach)</label>${inp('R',r.R,'number','0')}</div>
+          <div><label style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--gray3);display:block;margin-bottom:4px">I (Impact)</label>${inp('I',r.I,'number','0')}</div>
+          <div><label style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--gray3);display:block;margin-bottom:4px">C (Confidence %)</label>${inp('C',r.C,'number','0')}</div>
+          <div><label style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--gray3);display:block;margin-bottom:4px">E (Effort)</label>${inp('E',r.E,'number','1')}</div>
+        </div>
+        <div class="form-group full"><label>Comentários / Atualizações</label>${ta('comentarios',r.comentarios,'Adicione observações, bloqueadores, atualizações...')}</div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+        <button type="button" class="tb-btn secondary" onclick="closeFM()">Cancelar</button>
+        <button type="submit" class="tb-btn primary">💾 ${id?'Salvar alterações':'Criar demanda'}</button>
+      </div>
+    </form></div>`;
+  } else {
+    const r=id?PRBS.find(x=>x.id===id):{};const title=id?'Editar PRB':'Novo PRB';
+    h=`<div class="modal-header"><div><span class="modal-id-tag">${id||'NOVO'}</span><div class="modal-title">${title}</div></div><span class="modal-x" onclick="closeFM()">✕</span></div>
+    <div class="modal-body"><form id="crud-form" onsubmit="savePrb(event,'${id||''}')">
+      <div class="form-grid">
+        <div class="form-group req"><label>Nº PRB</label>${inp('num',r.num,'text','Ex: PRB00025689','required')}</div>
+        <div class="form-group"><label>ID Iniciativa</label>${inp('inic',r.inic,'text','Ex: FP-002')}</div>
+        <div class="form-group req"><label>Data</label>${inp('data',r.data,'date','','required')}</div>
+        <div class="form-group req"><label>Impacto</label>${sel('imp',IMP_OPTS,r.imp,'required')}</div>
+        <div class="form-group req"><label>Status</label>${sel('status',PRB_STATUS,r.status,'required')}</div>
+        <div class="form-group full req"><label>Título</label>${inp('title',r.title,'text','Descreva o problema...','required')}</div>
+        <div class="form-group full req"><label>Descrição</label>${ta('desc',r.desc,'Descreva o comportamento observado...')}</div>
+        <div class="form-group full"><label>Solução de Contorno</label>${ta('contorno',r.contorno,'Como contornar o problema no momento...')}</div>
+        <div class="form-group full"><label>Solução Definitiva</label>${ta('def',r.def,'Qual é a solução definitiva planejada...')}</div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+        <button type="button" class="tb-btn secondary" onclick="closeFM()">Cancelar</button>
+        <button type="submit" class="tb-btn primary">💾 ${id?'Salvar alterações':'Criar PRB'}</button>
+      </div>
+    </form></div>`;
+  }
+  document.getElementById('form-modal').innerHTML=h;
+  document.getElementById('form-overlay').classList.add('open');
+}
+function closeFM(){document.getElementById('form-overlay').classList.remove('open');}
+function closeFormOverlay(e){if(e.target===document.getElementById('form-overlay'))closeFM();}
+
+/* ═══ SAVE / DELETE ═══ */
+function getForm(){const f=document.getElementById('crud-form');if(!f)return{};const fd=new FormData(f);const obj={};fd.forEach((v,k)=>obj[k]=v);return obj;}
+function saveBl(e,id){
+  e.preventDefault();const d=getForm();
+  const rec={id:id||'BL-'+uid(),idInic:d.idInic||'—',name:d.name,area:d.area,prio:d.prio,sistema:d.sistema,tipo:d.tipo,resp:d.resp,status:d.status,R:+d.R||0,I:+d.I||0,C:+d.C||0,E:+d.E||1,jira:d.jira||'—',hist:d.hist,deadline:d.deadline||'',comentarios:d.comentarios||''};
+  if(id){const i=BL.findIndex(x=>x.id===id);if(i>-1)BL[i]=rec;}else{BL.unshift(rec);}
+  save(KEY.bl,BL);closeFM();renderBl();buildAlertas();buildDash();
+}
+function savePrb(e,id){
+  e.preventDefault();const d=getForm();
+  const rec={id:id||'PRB-'+uid(),num:d.num,inic:d.inic||'—',data:d.data,status:d.status,imp:d.imp,title:d.title,desc:d.desc||'',contorno:d.contorno||'',def:d.def||''};
+  if(id){const i=PRBS.findIndex(x=>x.id===id);if(i>-1)PRBS[i]=rec;}else{PRBS.unshift(rec);}
+  save(KEY.prbs,PRBS);closeFM();buildPrbs();
+}
+function deleteBl(id){if(!confirm('Excluir esta demanda? Ação irreversível.'))return;const i=BL.findIndex(x=>x.id===id);if(i>-1){BL.splice(i,1);save(KEY.bl,BL);renderBl();buildAlertas();buildDash();}}
+function deletePrb(id){if(!confirm('Excluir este PRB?'))return;const i=PRBS.findIndex(x=>x.id===id);if(i>-1){PRBS.splice(i,1);save(KEY.prbs,PRBS);buildPrbs();}}
+
+/* ═══ EXPORT EXCEL ═══ */
+function exportExcel(){
+  const wb=XLSX.utils.book_new();
+  const active=document.querySelector('.view.active');
+  let ws,name;
+  if(active?.id==='view-demandas'||true){
+    let data=BL.filter(r=>(blFilterStatus==='Todos'||r.status===blFilterStatus)&&(blFilterPrio==='Todos'||r.prio===blFilterPrio));
+    if(blSearch)data=data.filter(r=>[r.name,r.id,r.resp,r.area,r.sistema,r.tipo,r.comentarios||''].join(' ').toLowerCase().includes(blSearch));
+    const rows=data.map(r=>({ID:r.id,'Iniciativa':r.idInic,'Demanda':r.name,'Área':r.area,'Sistema':r.sistema,'Tipo':r.tipo,'Responsável':r.resp,'Prioridade':r.prio,'Status':r.status,'História Criada':r.hist,'R (Reach)':r.R,'I (Impact)':r.I,'C (Confidence)':r.C,'E (Effort)':r.E,'Score RICE':r.E?Math.round(r.R*r.I*r.C/r.E):0,'Jira':r.jira,'Deadline':fmtDate(r.deadline),'Comentários':r.comentarios}));
+    ws=XLSX.utils.json_to_sheet(rows);name='Backlog';
+    XLSX.utils.book_append_sheet(wb,ws,name);
+  }
+  const rmRows=RM.map(r=>({ID:r.id,'Iniciativa':r.name,'Tema':r.tema,'Responsável':r.resp,'Quarter':r.q,'Status':r.status,'Deadline':fmtDate(r.deadline),'Jira':r.jira,'Bloqueador':r.blocker,'Integrações':r.integracoes,'Comentários':r.obs}));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rmRows),'Roadmap');
+  const prbRows=PRBS.map(p=>({ID:p.id,'Nº PRB':p.num,'Iniciativa':p.inic,'Data':fmtDate(p.data),'Status':p.status,'Impacto':p.imp,'Título':p.title,'Descrição':p.desc,'Contorno':p.contorno,'Solução Definitiva':p.def}));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(prbRows),'PRBs');
+  XLSX.writeFile(wb,`Squad_Finance_Payments_${today()}.xlsx`);
+}
+
+/* ═══ INIT ═══ */
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('dt').textContent=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'});
+  initStore();
+  initProjects();
+  buildDash();
+  buildAlertas();
+  buildTimeline();
+  buildBlFilters();renderBl();
+  buildKanban();
+  buildProjetos();
+  buildPrbs();
+  setTimeout(()=>{document.querySelectorAll('.prog-fill,.epic-fill').forEach(el=>{const w=el.style.width;el.style.width='0';setTimeout(()=>el.style.width=w,100);});},400);
+});
+</script>
+</body>
+</html>
