@@ -6,145 +6,8 @@
 <title>Squad Finance & Payments — Leroy Merlin</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%237bb51c'/%3E%3Ctext x='32' y='46' text-anchor='middle' font-size='38' font-family='Arial Black' fill='white'%3EL%3C/text%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
-/* ═══ INICIATIVAS CRUD ═══ */
-let fpPage=1, fpSortCol='id', fpSortDir=1, fpFilterStatus='Todos';
-function buildFPFilters(){
-  const opts=['Todos','🟢 Concluído','🟡 Em andamento','🟠 Bloqueado','🔵 Não iniciado','🟣 Em testes'];
-  document.getElementById('fp-filters').innerHTML=opts.map(s=>`<button class="filter-btn ${s===fpFilterStatus?'on':''}" onclick="setFPFilter('${s}',this)">${s}</button>`).join('');
-}
-function setFPFilter(v,btn){fpFilterStatus=v;document.querySelectorAll('#fp-filters .filter-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');fpPage=1;renderFP();}
-function renderFP(){
-  let data=RM.filter(r=>fpFilterStatus==='Todos'||r.status===fpFilterStatus);
-  data.sort((a,b)=>{const va=String(a[fpSortCol]||'').toLowerCase(),vb=String(b[fpSortCol]||'').toLowerCase();return va<vb?-fpSortDir:va>vb?fpSortDir:0;});
-  const total=data.length,pages=Math.max(1,Math.ceil(total/15));
-  fpPage=Math.min(fpPage,pages);
-  const sl=data.slice((fpPage-1)*15,fpPage*15);
-  document.getElementById('sb-fp-cnt') && (document.getElementById('sb-fp-cnt').textContent=total);
-  document.getElementById('fp-tbl').innerHTML=sl.map((r,i)=>{
-    const linked=BL.filter(b=>b.idInic===r.id).length;
-    return`<tr onclick="openModal('rm','${r.id}')" style="${i%2?'background:var(--bg3)':''}">
-      <td class="td-id">${r.id}</td>
-      <td class="td-name">${r.name}</td>
-      <td class="td-sm">${r.tema}</td>
-      <td class="td-sm">${r.resp}</td>
-      <td>${r.q&&r.q!=='—'?pill(r.q,{Q1:'p-q1',Q2:'p-q2',Q3:'p-q3',Q4:'p-q4'}[r.q]||'p-idle'):'—'}</td>
-      <td>${pill(r.status,'p-'+sc(r.status))}</td>
-      <td class="td-sm">${fmtDate(r.deadline)}</td>
-      <td class="td-jira">${r.jira&&r.jira!=='—'?r.jira:'—'}</td>
-      <td><span class="pill p-new" style="cursor:pointer" onclick="event.stopPropagation();go('demandas',document.querySelector('.sb-item[onclick*=demandas]'));blFilterIdInic='${r.id}';renderBL()">${linked} demanda(s)</span></td>
-      <td onclick="event.stopPropagation()" style="white-space:nowrap">
-        <button class="tb-btn secondary" style="padding:3px 7px;font-size:10px" onclick="openCrudForm('fp','${r.id}')">✏</button>
-        <button class="tb-btn secondary" style="padding:3px 7px;font-size:10px;color:var(--red)" onclick="deleteFP('${r.id}')">🗑</button>
-      </td>
-    </tr>`;}).join('')||`<tr><td colspan="10"><div class="empty"><div class="empty-icon">🎯</div><p>Nenhuma iniciativa encontrada</p></div></td></tr>`;
-  buildPager('fp-pager',fpPage,pages,p=>{fpPage=p;renderFP();},total,sl.length);
-}
-function deleteFP(id){if(!confirm('Excluir esta iniciativa?'))return;const i=RM.findIndex(x=>x.id===id);if(i>-1){RM.splice(i,1);save(KEY.rm,RM);renderFP();buildDash();buildAlertas();renderTimeline();renderKanban();}}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-/* ── FP in openCrudForm ── */
-const _origOpenCrud=openCrudForm;
-function openCrudForm(type,id=null,...rest){
-  if(type==='fp'){
-    const r=id?RM.find(x=>x.id===id):{};
-    const title=id?'Editar Iniciativa':'Nova Iniciativa (FP)';
-    const STATUS_OPTS2=['🔵 Não iniciado','🟡 Em andamento','🟠 Bloqueado','🟣 Em testes','🟢 Concluído','⚫ Cancelado','⬜ Não priorizado'];
-    const TEMAS2=['Meios de Pagamento','LM Pay','Contas a Receber','Mesa de Crédito','Tesouraria','Antecipação','Reforma Tributária','Business Assurance','S4'];
-    const Q2=['Q1','Q2','Q3','Q4','—','?'];
-    const sel2=(n,opts,val)=>`<select name="${n}">${opts.map(o=>`<option value="${o}"${val===o?' selected':''}>${o}</option>`).join('')}</select>`;
-    const inp2=(n,v,t='text',ph='')=>`<input type="${t}" name="${n}" value="${v||''}" placeholder="${ph}">`;
-    const h=`<div class="modal-header"><div><span class="modal-id-tag">${id||'NOVA'}</span><div class="modal-title">${title}</div></div><span class="modal-x" onclick="closeFM()">✕</span></div>
-    <div class="modal-body"><form id="crud-form" onsubmit="saveFP(event,'${id||''}')">
-      <div class="form-grid">
-        <div class="form-group full req"><label>Nome da Iniciativa</label>${inp2('name',r.name,'text','Ex: Orquestração de meios de pagamento')}</div>
-        <div class="form-group req"><label>Tema</label>${sel2('tema',TEMAS2,r.tema)}</div>
-        <div class="form-group req"><label>Responsável</label>${inp2('resp',r.resp,'text','Ex: Leonardo')}</div>
-        <div class="form-group req"><label>Quarter</label>${sel2('q',Q2,r.q)}</div>
-        <div class="form-group req"><label>Status</label>${sel2('status',STATUS_OPTS2,r.status)}</div>
-        <div class="form-group"><label>Jira / PEC</label>${inp2('jira',r.jira,'text','Ex: PEC-124')}</div>
-        <div class="form-group"><label>Deadline</label>${inp2('deadline',r.deadline,'date')}</div>
-        <div class="form-group full"><label>Bloqueador</label>${inp2('blocker',r.blocker==='—'?'':r.blocker,'text','Ex: Aguardando alinhamento com fornecedor')}</div>
-        <div class="form-group full"><label>Integrações</label>${inp2('integracoes',r.integracoes==='—'?'':r.integracoes,'text','Ex: VA, SAP, HUB')}</div>
-        <div class="form-group full"><label>Comentários / Observações</label><textarea name="obs" placeholder="Contexto, atualizações, próximos passos...">${r.obs||''}</textarea></div>
-      </div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
-        <button type="button" class="tb-btn secondary" onclick="closeFM()">Cancelar</button>
-        <button type="submit" class="tb-btn primary">💾 ${id?'Salvar':'Criar Iniciativa'}</button>
-      </div>
-    </form></div>`;
-    document.getElementById('form-modal').innerHTML=h;
-    document.getElementById('form-overlay').classList.add('open');
-  } else {
-    _origOpenCrud(type,id,...rest);
-  }
-}
-function saveFP(e,id){
-  e.preventDefault();const d=getForm();
-  if(!d.name){alert('Nome é obrigatório');return;}
-  const rec={id:id||'FP-'+uid(),name:d.name,tema:d.tema,resp:d.resp,q:d.q,status:d.status,jira:d.jira||'—',deadline:d.deadline||'',blocker:d.blocker||'—',integracoes:d.integracoes||'—',obs:d.obs||''};
-  if(id){const i=RM.findIndex(x=>x.id===id);if(i>-1)RM[i]=rec;}else RM.unshift(rec);
-  save(KEY.rm,RM);closeFM();renderFP();buildDash();buildAlertas();renderTimeline();renderKanban();
-}
-
-/* ── FP modal view patch ── */
-const _origOpenModal=openModal;
-function openModal(type,id){
-  if(type==='rm'){
-    const r=RM.find(x=>x.id===id);if(!r)return;
-    const linked=BL.filter(b=>b.idInic===r.id);
-    const h=`<div class="modal-header"><div><span class="modal-id-tag">${r.id}·${r.jira&&r.jira!=='—'?r.jira:'sem Jira'}</span><div class="modal-title">${r.name}</div></div><span class="modal-x" onclick="closeVM()">✕</span></div>
-    <div class="modal-body">
-      <div class="mf-grid">
-        <div class="mf"><label>Status</label>${pill(r.status,'p-'+sc(r.status))}</div>
-        <div class="mf"><label>Quarter</label>${r.q&&r.q!=='—'?pill(r.q,{Q1:'p-q1',Q2:'p-q2',Q3:'p-q3',Q4:'p-q4'}[r.q]||'p-idle'):'—'}</div>
-        <div class="mf"><label>Tema</label><p>${r.tema}</p></div>
-        <div class="mf"><label>Responsável</label><p>${r.resp}</p></div>
-        <div class="mf"><label>Deadline</label><p>${fmtDate(r.deadline)}</p></div>
-        <div class="mf"><label>Jira/PEC</label><p style="font-family:'JetBrains Mono',monospace;color:var(--lm-d)">${r.jira||'—'}</p></div>
-      </div>
-      <div class="m-div"></div>
-      <div class="mf" style="margin-bottom:10px"><label>Bloqueador</label><p style="color:${r.blocker&&r.blocker!=='—'?'var(--s-blocked)':'var(--text-muted)'}">${r.blocker&&r.blocker!=='—'?'⚠ '+r.blocker:'Sem bloqueador'}</p></div>
-      <div class="mf" style="margin-bottom:10px"><label>Integrações</label><p>${r.integracoes||'—'}</p></div>
-      <div class="mf" style="margin-bottom:10px"><label>Comentários</label><p>${r.obs||'—'}</p></div>
-      ${linked.length?`<div class="mf"><label>Demandas vinculadas (${linked.length})</label><div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px">${linked.map(b=>`<span class="pill p-q2" style="cursor:pointer" onclick="closeVM();openModal('bl','${b.id}')">${b.id} — ${b.name.slice(0,30)}</span>`).join('')}</div></div>`:''}
-    </div>
-    <div class="modal-footer">
-      <button class="tb-btn secondary" onclick="closeVM()">Fechar</button>
-      <button class="tb-btn primary" onclick="closeVM();openCrudForm('fp','${r.id}')">✏ Editar</button>
-    </div>`;
-    document.getElementById('view-modal').innerHTML=h;
-    document.getElementById('view-overlay').classList.add('open');
-  } else {
-    _origOpenModal(type,id);
-  }
-}
-
-/* ── Filter BL by initiative ── */
-let blFilterIdInic=null;
-const _origRenderBL=renderBL;
-function renderBL(){
-  if(blFilterIdInic){
-    // temporary filter by iniciativa - reset after render
-    const orig=blFS;
-    _origRenderBL();
-    blFilterIdInic=null;
-  } else {
-    _origRenderBL();
-  }
-}
-
-/* ── add FP to nav TITLES ── */
-const _origTITLES=Object.assign({},TITLES||{});
-if(typeof TITLES!=='undefined')TITLES['iniciativas']='Iniciativas <span>/ FP-xxx</span>';
-
-/* ── init FP tab when navigating ── */
-const _origGo=go;
-function go(name,el){
-  _origGo(name,el);
-  if(name==='iniciativas'){buildFPFilters();renderFP();}
-}
-
-</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
 :root {
@@ -587,12 +450,12 @@ td{padding:9px 11px;vertical-align:middle;}
 <div class="view" id="view-iniciativas">
   <div class="ph">
     <div class="ph-text"><h1>Iniciativas (FP)</h1><p>Cadastre e gerencie as iniciativas do roadmap · demandas vinculam pelo ID da iniciativa · clique para ver detalhes e demandas ligadas</p></div>
-    <div class="ph-actions"><button class="tb-btn primary" onclick="openCrudForm('fp')">+ Nova Iniciativa</button></div>
+    <div class="ph-actions"><button class="btn pri" onclick="openForm('rm')">+ Nova Iniciativa</button></div>
   </div>
-  <div class="filter-bar" id="fp-filters"></div>
-  <div class="panel full-w">
-    <div class="tbl-wrap"><table>
-      <thead><tr><th>ID</th><th>Iniciativa</th><th>Tema</th><th>Resp.</th><th>Quarter</th><th>Status</th><th>Deadline</th><th>Jira</th><th>Demandas</th><th>Ações</th></tr></thead>
+  <div class="fbar" id="fp-fbar"></div>
+  <div class="panel">
+    <div class="tw"><table>
+      <thead><tr><th onclick="sortFP('id')">ID</th><th onclick="sortFP('name')">Iniciativa</th><th onclick="sortFP('tema')">Tema</th><th onclick="sortFP('resp')">Resp.</th><th onclick="sortFP('q')">Quarter</th><th onclick="sortFP('status')">Status</th><th onclick="sortFP('deadline')">Deadline</th><th onclick="sortFP('jira')">Jira</th><th>Demandas</th><th>Ações</th></tr></thead>
       <tbody id="fp-tbl"></tbody>
     </table></div>
     <div class="pager" id="fp-pager"></div>
@@ -825,13 +688,13 @@ function doSearch(){
 }
 function clearSearch(){
   srchQ='';
-  document.getElementById('srch').value='';window._curView=name;
+  document.getElementById('srch').value='';
   document.getElementById('view-srch') && (document.getElementById('view-srch').remove());
   // re-show current active view
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
   const cur=window._curView||'dash';
   const cv=document.getElementById('view-'+cur);
-  if(cv)cv.classList.add('active');
+  if(cv)cv.classList.add('on');
 }
 function globalSearch(){
   const q=srchQ;
@@ -841,14 +704,14 @@ function globalSearch(){
   PRBS.forEach(r=>{if([r.id,r.num,r.title,r.desc,r.inic].join(' ').toLowerCase().includes(q))res.push({tipo:'PRB',id:r.id,name:r.title,status:r.status,resp:r.inic,extra:r.imp,_t:'prb'});});
   // show search overlay
   let sv=document.getElementById('view-srch');
-  if(!sv){sv=document.createElement('div');sv.id='view-srch';sv.className='view active';document.querySelector('.main').appendChild(sv);}
-  else sv.classList.add('active');
-  document.querySelectorAll('.view:not(#view-srch)').forEach(v=>v.classList.remove('active'));
-  document.getElementById('tb-title').innerHTML=`Busca <span>/ "${q}" — ${res.length} resultado(s)</span>`;
-  sv.innerHTML=`<div class="ph"><div class="ph-text"><h1>Resultados</h1><p>${res.length} item(ns) encontrado(s) para "${q}"</p></div><div class="ph-actions"><button class="tb-btn secondary" onclick="clearSearch()">✕ Limpar busca</button></div></div>
-  <div class="panel full-w"><div class="tbl-wrap"><table>
+  if(!sv){sv=document.createElement('div');sv.id='view-srch';sv.className='view on';document.querySelector('.main').appendChild(sv);}
+  else sv.classList.add('on');
+  document.querySelectorAll('.view:not(#view-srch)').forEach(v=>v.classList.remove('on'));
+  document.getElementById('tb-t').innerHTML=`Busca <span>/ "${q}" — ${res.length} resultado(s)</span>`;
+  sv.innerHTML=`<div class="ph"><div class="ph-text"><h1>Resultados</h1><p>${res.length} item(ns) encontrado(s) para "${q}"</p></div><div class="ph-actions"><button class="btn sec" onclick="clearSearch()">✕ Limpar busca</button></div></div>
+  <div class="panel"><div class="tw"><table>
     <thead><tr><th>Tipo</th><th>ID</th><th>Nome</th><th>Status</th><th>Resp.</th><th>Área/Tema</th></tr></thead>
-    <tbody>${res.map((r,i)=>`<tr onclick="openModal('${r._t}','${r.id}')" style="${i%2?'background:var(--bg3)':''}">
+    <tbody>${res.map((r,i)=>`<tr onclick="openViewModal('${r._t}','${r.id}')" style="${i%2?'background:var(--bg3)':''}">
       <td><span class="pill ${r._t==='rm'?'p-q1':r._t==='bl'?'p-q2':'p-alta'}">${r.tipo}</span></td>
       <td class="td-id">${r.id}</td><td class="td-name">${r.name}</td>
       <td>${pill(r.status,'p-'+sc(r.status))}</td>
@@ -914,14 +777,13 @@ function buildAlertas(){
   const inc=BL.filter(r=>(!r.resp||r.resp==='—')&&!r.status.includes('Concluído'));
   const total=late.length+soon.length+noH.length+inc.length;
   document.getElementById('al-cnt').textContent=total;
-  const mk=(r,cls,ico,extra)=>{const t=r._t||'bl';return`<div class="alert ${cls}" onclick="openModal('${t}','${r.id}')"><div class="alert-icon">${ico}</div><div class="alert-body"><div class="alert-title">${r._tipo||''} ${r.id} — ${r.name}</div><div class="alert-desc">${extra}</div></div></div>`;};
-  const empty='<div class="empty"><div class="empty-icon">✅</div><p>Nenhum</p></div>';
+  const mk=(r,cls,ico,extra)=>{const t=r._t||'bl';return`<div class="al ${cls}" onclick="openViewModal('${t}','${r.id}')"><div class="al-ico">${ico}</div><div class="al-body"><div class="al-title">${r._tipo||''} ${r.id} — ${r.name}</div><div class="al-desc">${extra}</div></div></div>`;};
+  const empty='<div class="empty"><div class="empty-ico">✅</div><p>Nenhum</p></div>';
   document.getElementById('al-late').innerHTML=late.map(r=>mk(r,'danger','📅',`Deadline: ${fmtDate(r.deadline)} · ${r.status}`)).join('')||empty;
   document.getElementById('al-soon').innerHTML=soon.map(r=>mk(r,'warn','⏰',`Vence em ${fmtDate(r.deadline)}`)).join('')||empty;
-  document.getElementById('al-hist').innerHTML=noH.map(r=>mk(r,'purple','📝',`História não criada · ${r.area}`)).join('')||empty;
+  document.getElementById('al-hist').innerHTML=noH.map(r=>mk(r,'pur','📝',`História não criada · ${r.area}`)).join('')||empty;
   document.getElementById('al-inc').innerHTML=inc.map(r=>mk(r,'info','⚠',`Sem responsável · ${r.area}`)).join('')||empty;
 }
-function 
 
 /* ═══ CHARTS ═══ */
 const chs={};
@@ -968,6 +830,32 @@ function renderTL(){
     h+='</div>';
   });
   document.getElementById('tl-inner').innerHTML=h;
+}
+
+
+/* ═══ INICIATIVAS (FP) ═══ */
+let fpPage=1,fpSortCol='id',fpSortDir=1,fpFS='Todos';
+function buildFPFilters(){
+  const ss=['Todos','🟢 Concluído','🟡 Em andamento','🟠 Bloqueado','🔵 Não iniciado','🟣 Em testes'];
+  document.getElementById('fp-fbar').innerHTML=ss.map(st=>`<button class="fb ${st===fpFS?'on':''}" onclick="setFPFS('${st}',this)">${st}</button>`).join('');
+}
+function setFPFS(v,btn){fpFS=v;document.querySelectorAll('#fp-fbar .fb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');fpPage=1;renderFP();}
+function sortFP(col){if(fpSortCol===col)fpSortDir*=-1;else{fpSortCol=col;fpSortDir=1;}renderFP();}
+function renderFP(){
+  let data=RM.filter(r=>fpFS==='Todos'||r.status===fpFS);
+  if(srchQ)data=data.filter(r=>[r.id,r.name,r.tema,r.resp,r.jira,r.obs||'',r.blocker||''].join(' ').toLowerCase().includes(srchQ));
+  data.sort((a,b)=>{const va=String(a[fpSortCol]||'').toLowerCase(),vb=String(b[fpSortCol]||'').toLowerCase();if(va<vb)return-fpSortDir;if(va>vb)return fpSortDir;return 0;});
+  const total=data.length,pages=Math.max(1,Math.ceil(total/PG));fpPage=Math.min(fpPage,pages);
+  const slice=data.slice((fpPage-1)*PG,fpPage*PG);
+  document.getElementById('sb-fp-cnt').textContent=total;
+  document.getElementById('fp-tbl').innerHTML=slice.map((r,i)=>`<tr onclick="openViewModal('rm','${r.id}')" style="${i%2?'background:var(--bg3)':''}">
+      <td class="td-id">${r.id}</td><td class="td-name">${r.name}</td><td class="td-sm">${r.tema}</td><td class="td-sm">${r.resp}</td>
+      <td>${r.q&&r.q!=='—'?pill(r.q,qc(r.q)):'—'}</td><td>${pill(r.status,'p-'+sc(r.status))}</td><td class="td-sm">${fmtDate(r.deadline)}</td>
+      <td class="td-jira">${r.jira&&r.jira!=='—'?r.jira:'—'}</td>
+      <td>${BL.filter(b=>b.idInic===r.id).length}</td>
+      <td onclick="event.stopPropagation()" style="white-space:nowrap"><button class="btn sec" style="padding:3px 7px;font-size:10px" onclick="openForm('rm','${r.id}')">✏</button></td>
+    </tr>`).join('')||`<tr><td colspan="10"><div class="empty"><div class="empty-ico">🎯</div><p>Nenhuma iniciativa encontrada</p></div></td></tr>`;
+  buildPager('fp-pager',fpPage,pages,p=>{fpPage=p;renderFP();},total,slice.length);
 }
 
 /* ═══ BACKLOG ═══ */
@@ -1476,6 +1364,7 @@ document.addEventListener('DOMContentLoaded',function(){
   buildDash();
   buildAlertas();
   buildTimeline();
+  buildFPFilters();renderFP();
   buildBLFilters();renderBL();
   buildKanban();
   buildProjetos();
