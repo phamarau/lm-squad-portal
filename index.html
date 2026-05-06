@@ -683,6 +683,7 @@ function go(name,el){
   window._curView=name;srchQ='';
   if(name==='charts')setTimeout(buildCharts,80);
 }
+window.go=go;
 let srchQ='';
 function doSearch(){
   srchQ=document.getElementById('srch').value.trim().toLowerCase();
@@ -1366,6 +1367,12 @@ function exportXLS(){
 /* ═══ INIT ═══ */
 document.addEventListener('DOMContentLoaded',function(){
   document.getElementById('tb-date').textContent=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'});
+  document.querySelectorAll('.sb-item').forEach(function(item){
+    item.addEventListener('click',function(){
+      const m=(item.getAttribute('onclick')||'').match(/go\('([^']+)'/);
+      if(m)go(m[1],item);
+    });
+  });
   initAll();
   buildDash();
   buildAlertas();
