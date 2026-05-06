@@ -671,13 +671,16 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
 /* ═══ NAV ═══ */
 const TITLES={iniciativas:'Iniciativas <span>/ FP-xxx</span>',dash:'Dashboard <span>/ Visão Executiva</span>',alertas:'Alertas <span>/ Painel</span>',charts:'Gráficos <span>/ Analytics</span>',timeline:'Roadmap <span>/ Timeline 2026</span>',demandas:'Backlog <span>/ Demandas</span>',kanban:'Kanban <span>/ Iniciativas</span>',projetos:'Projetos <span>/ Execução</span>',prbs:'PRBs <span>/ Incidentes</span>'};
 function go(name,el){
+  const target=document.getElementById('view-'+name);
+  if(!target){console.warn('View não encontrada:',name);return;}
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
-  document.getElementById('view-'+name).classList.add('on');
+  target.classList.add('on');
   document.querySelectorAll('.sb-item').forEach(n=>n.classList.remove('on'));
   if(el&&el.classList)el.classList.add('on');
   else{const nav=document.querySelector(`.sb-item[onclick*="${name}"]`);if(nav)nav.classList.add('on');}
-  document.getElementById('tb-t').innerHTML=TITLES[name]||name;
-  document.getElementById('srch').value='';window._curView=name;srchQ='';
+  const tb=document.getElementById('tb-t');if(tb)tb.innerHTML=TITLES[name]||name;
+  const sr=document.getElementById('srch');if(sr)sr.value='';
+  window._curView=name;srchQ='';
   if(name==='charts')setTimeout(buildCharts,80);
 }
 let srchQ='';
