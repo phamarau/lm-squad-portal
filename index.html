@@ -674,7 +674,8 @@ function go(name,el){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
   document.getElementById('view-'+name).classList.add('on');
   document.querySelectorAll('.sb-item').forEach(n=>n.classList.remove('on'));
-  el.classList.add('on');
+  if(el&&el.classList)el.classList.add('on');
+  else{const nav=document.querySelector(`.sb-item[onclick*="${name}"]`);if(nav)nav.classList.add('on');}
   document.getElementById('tb-t').innerHTML=TITLES[name]||name;
   document.getElementById('srch').value='';window._curView=name;srchQ='';
   if(name==='charts')setTimeout(buildCharts,80);
@@ -695,6 +696,8 @@ function clearSearch(){
   const cur=window._curView||'dash';
   const cv=document.getElementById('view-'+cur);
   if(cv)cv.classList.add('on');
+  const nav=document.querySelector(`.sb-item[onclick*="${cur}"]`);if(nav){document.querySelectorAll('.sb-item').forEach(n=>n.classList.remove('on'));nav.classList.add('on');}
+  document.getElementById('tb-t').innerHTML=TITLES[cur]||cur;
 }
 function globalSearch(){
   const q=srchQ;
